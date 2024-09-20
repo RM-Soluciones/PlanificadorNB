@@ -32,7 +32,7 @@ function App() {
     const [formData, setFormData] = useState({
         cliente: '',
         servicio: '',
-        tipoServicio: '', // Campo para seleccionar tipo de servicio
+        tipoServicio: '',
         unidades: [
             { movil: '', choferes: ['', '', ''] }
         ],
@@ -41,6 +41,10 @@ function App() {
         horario: '',
         observaciones: ''
     });
+    const [isLoggedIn, setIsLoggedIn] = useState(false); // Estado de autenticación
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [dropdownVisible, setDropdownVisible] = useState(false); // Estado para mostrar el dropdown de login
 
     const sliderRef = useRef(null);
 
@@ -72,8 +76,8 @@ function App() {
     const settings = useMemo(() => ({
         dots: false,
         infinite: false,
-        speed: 0,
-        slidesToShow: window.innerWidth <= 768 ? 2 : window.innerWidth <= 1024 ? 4 : 6, // 2 días en móviles, 4 en tablets, 6 en pantallas grandes
+        speed: 500,
+        slidesToShow: window.innerWidth <= 768 ? 2 : window.innerWidth <= 1024 ? 4 : 6,
         slidesToScroll: 1,
         initialSlide: currentIndex,
         afterChange: (current) => {
@@ -123,8 +127,23 @@ function App() {
         };
     }, [currentDay, currentMonth, daysInYear]);
 
-    // Guardar un servicio en la base de datos
+    // Manejar inicio de sesión
+    const handleLogin = () => {
+        if (email === "admin" && password === "12345") {
+            setIsLoggedIn(true);
+            setDropdownVisible(false); // Ocultar dropdown tras iniciar sesión
+        } else {
+            alert("Correo o contraseña incorrecta");
+        }
+    };
+
+    // Manejar cierre de sesión
+    const handleLogout = () => {
+        setIsLoggedIn(false);
+    };
+
     const saveServiceToDatabase = async (serviceData) => {
+        console.log('Datos a guardar:', serviceData); // Añadir este log para depurar
         const { error } = await supabase
             .from('services')
             .insert([serviceData]);
@@ -140,29 +159,20 @@ function App() {
         }
     };
 
-    // Actualizar un servicio en la base de datos
     const updateServiceInDatabase = async (serviceData) => {
-        const validServiceData = {
-            ...serviceData,
-            id: serviceData.id ?? 0,
-            year: serviceData.year ?? new Date().getFullYear(),
-            month: serviceData.month ?? (new Date().getMonth() + 1),
-            day: serviceData.day ?? new Date().getDate(),
-        };
-
         const { error } = await supabase
             .from('services')
-            .update(validServiceData)
-            .eq('id', validServiceData.id);
+            .update(serviceData)
+            .eq('id', serviceData.id);
 
         if (error) {
             console.error('Error al actualizar el servicio:', error);
         } else {
-            const dateKey = `${validServiceData.year}-${validServiceData.month}-${validServiceData.day}`;
+            const dateKey = `${serviceData.year}-${serviceData.month}-${serviceData.day}`;
             setServices((prevServices) => {
                 const updatedServices = { ...prevServices };
                 updatedServices[dateKey] = updatedServices[dateKey].map((s) =>
-                    s.id === validServiceData.id ? validServiceData : s
+                    s.id === serviceData.id ? serviceData : s
                 );
                 return updatedServices;
             });
@@ -182,7 +192,7 @@ function App() {
     const removeUnidad = (index) => {
         setFormData((prevData) => {
             const updatedUnidades = [...prevData.unidades];
-            updatedUnidades.splice(index, 1); // Eliminar la unidad en el índice dado
+            updatedUnidades.splice(index, 1);
             return { ...prevData, unidades: updatedUnidades };
         });
     };
@@ -230,7 +240,7 @@ function App() {
         setFormData({
             cliente: '',
             servicio: '',
-            tipoServicio: '', // Campo para tipo de servicio
+            tipoServicio: '',
             unidades: [{ movil: '', choferes: ['', '', ''] }],
             origen: '',
             destino: '',
@@ -301,6 +311,36 @@ function App() {
         <div className="app-container">
             <header className="header">
                 <h1>Planificación de Servicios</h1>
+                <div className="login-dropdown">
+                    {isLoggedIn ? (
+                        <button onClick={handleLogout} className="button">Cerrar Sesión</button>
+                    ) : (
+                        <div>
+                            <button onClick={() => setDropdownVisible(!dropdownVisible)} className="button">
+                                Iniciar Sesión
+                            </button>
+                            {dropdownVisible && (
+                                <div className="login-dropdown-content">
+                                    <div className="login-form">
+                                        <label>Correo:</label>
+                                        <input
+                                            type="email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                        />
+                                        <label>Contraseña:</label>
+                                        <input
+                                            type="password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                        />
+                                        <button onClick={handleLogin} className="button">Entrar</button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
             </header>
 
             {!showForm && (
@@ -343,9 +383,11 @@ function App() {
                                     <div className="day-card-content">
                                         <h3>{`${dayOfWeek} ${day}`}</h3>
 
-                                        <button className="add-service-btn" onClick={() => addService(dateKey)}>
-                                            + Servicio
-                                        </button>
+                                        {isLoggedIn && (
+                                            <button className="add-service-btn" onClick={() => addService(dateKey)}>
+                                                + Servicio
+                                            </button>
+                                        )}
 
                                         <div className="service-list">
                                             {services[dateKey] && services[dateKey].length > 0 && (
@@ -370,26 +412,30 @@ function App() {
                                                                 </div>
                                                             ))}
 
-                                                            <button
-                                                                className="button"
-                                                                onClick={() => setExpandedService(service)}
-                                                            >
-                                                                Ver detalles
-                                                            </button>
+                                                            {isLoggedIn && (
+                                                                <>
+                                                                    <button
+                                                                        className="button"
+                                                                        onClick={() => setExpandedService(service)}
+                                                                    >
+                                                                        Ver detalles
+                                                                    </button>
 
-                                                            <button
-                                                                className="button"
-                                                                onClick={() => editService(service)} // Botón para editar
-                                                            >
-                                                                Editar
-                                                            </button>
+                                                                    <button
+                                                                        className="button"
+                                                                        onClick={() => editService(service)}
+                                                                    >
+                                                                        Editar
+                                                                    </button>
 
-                                                            <button
-                                                                className="button completed-btn"
-                                                                onClick={() => markAsCompleted(dateKey, index)}
-                                                            >
-                                                                {service.completed ? "Finalizado" : "Marcar como Finalizado"}
-                                                            </button>
+                                                                    <button
+                                                                        className="button completed-btn"
+                                                                        onClick={() => markAsCompleted(dateKey, index)}
+                                                                    >
+                                                                        {service.completed ? "Finalizado" : "Marcar como Finalizado"}
+                                                                    </button>
+                                                                </>
+                                                            )}
                                                         </div>
                                                     ))}
                                                 </div>
@@ -402,7 +448,7 @@ function App() {
                     </Slider>
                 )}
 
-                {showForm && (
+                {showForm && showForm !== 'login' && (
                     <div className="form-container">
                         <h4>{editingService ? "Editar servicio" : "Añadir servicio"}</h4>
                         <label>Cliente:</label>
