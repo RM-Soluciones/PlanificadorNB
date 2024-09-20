@@ -10,6 +10,14 @@ const getDaysInMonth = (month, year) => {
     return new Date(year, month, 0).getDate();
 };
 
+// Definir colores por tipo de servicio
+const serviceTypeColors = {
+    "IN OUT": "#00cfff",
+    "SUBIDA": "#28a745",
+    "BAJADA": "#dc3545",
+    "STAND BY": "#ffc107"
+};
+
 function App() {
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth() + 1;
@@ -24,6 +32,7 @@ function App() {
     const [formData, setFormData] = useState({
         cliente: '',
         servicio: '',
+        tipoServicio: '', // Campo para seleccionar tipo de servicio
         unidades: [
             { movil: '', choferes: ['', '', ''] }
         ],
@@ -59,10 +68,11 @@ function App() {
         return days;
     }, [currentYear, getDayOfWeek]);
 
+    // Configuración del slider con useMemo
     const settings = useMemo(() => ({
         dots: false,
         infinite: false,
-        speed: 500,
+        speed: 0,
         slidesToShow: window.innerWidth <= 768 ? 2 : window.innerWidth <= 1024 ? 4 : 6, // 2 días en móviles, 4 en tablets, 6 en pantallas grandes
         slidesToScroll: 1,
         initialSlide: currentIndex,
@@ -113,6 +123,7 @@ function App() {
         };
     }, [currentDay, currentMonth, daysInYear]);
 
+    // Guardar un servicio en la base de datos
     const saveServiceToDatabase = async (serviceData) => {
         const { error } = await supabase
             .from('services')
@@ -129,20 +140,29 @@ function App() {
         }
     };
 
+    // Actualizar un servicio en la base de datos
     const updateServiceInDatabase = async (serviceData) => {
+        const validServiceData = {
+            ...serviceData,
+            id: serviceData.id ?? 0,
+            year: serviceData.year ?? new Date().getFullYear(),
+            month: serviceData.month ?? (new Date().getMonth() + 1),
+            day: serviceData.day ?? new Date().getDate(),
+        };
+
         const { error } = await supabase
             .from('services')
-            .update(serviceData)
-            .eq('id', serviceData.id);
+            .update(validServiceData)
+            .eq('id', validServiceData.id);
 
         if (error) {
             console.error('Error al actualizar el servicio:', error);
         } else {
-            const dateKey = `${serviceData.year}-${serviceData.month}-${serviceData.day}`;
+            const dateKey = `${validServiceData.year}-${validServiceData.month}-${validServiceData.day}`;
             setServices((prevServices) => {
                 const updatedServices = { ...prevServices };
                 updatedServices[dateKey] = updatedServices[dateKey].map((s) =>
-                    s.id === serviceData.id ? serviceData : s
+                    s.id === validServiceData.id ? validServiceData : s
                 );
                 return updatedServices;
             });
@@ -157,6 +177,14 @@ function App() {
                 { movil: '', choferes: ['', '', ''] }
             ]
         }));
+    };
+
+    const removeUnidad = (index) => {
+        setFormData((prevData) => {
+            const updatedUnidades = [...prevData.unidades];
+            updatedUnidades.splice(index, 1); // Eliminar la unidad en el índice dado
+            return { ...prevData, unidades: updatedUnidades };
+        });
     };
 
     const handleInputChange = (e) => {
@@ -202,6 +230,7 @@ function App() {
         setFormData({
             cliente: '',
             servicio: '',
+            tipoServicio: '', // Campo para tipo de servicio
             unidades: [{ movil: '', choferes: ['', '', ''] }],
             origen: '',
             destino: '',
@@ -213,7 +242,7 @@ function App() {
     const updateService = () => {
         const serviceData = {
             ...formData,
-            id: editingService.id, // ID del servicio que estamos editando
+            id: editingService.id,
         };
         updateServiceInDatabase(serviceData);
         setShowForm(null);
@@ -221,8 +250,8 @@ function App() {
     };
 
     const editService = (service) => {
-        setFormData(service); // Cargar datos existentes en el formulario
-        setEditingService(service); // Guardar el servicio que se está editando
+        setFormData(service);
+        setEditingService(service);
         setShowForm(true);
     };
 
@@ -322,17 +351,22 @@ function App() {
                                             {services[dateKey] && services[dateKey].length > 0 && (
                                                 <div className="service-list-items">
                                                     {services[dateKey].map((service, index) => (
-                                                        <div key={index} className="service-card">
+                                                        <div
+                                                            key={index}
+                                                            className="service-card"
+                                                            style={{
+                                                                backgroundColor:
+                                                                    serviceTypeColors[service.tipoServicio] || "white"
+                                                            }}
+                                                        >
                                                             <p><strong>Cliente:</strong> {service.cliente}</p>
                                                             <p><strong>Servicio:</strong> {service.servicio}</p>
                                                             {service.unidades?.map((unidad, idx) => (
                                                                 <div key={idx}>
                                                                     <p><strong>Móvil:</strong> {unidad.movil}</p>
-                                                                    {unidad.choferes
-                                                                        .filter((chofer) => chofer) // Filtrar los choferes vacíos
-                                                                        .map((chofer, choferIdx) => (
-                                                                            <p key={choferIdx}><strong>Chofer {choferIdx + 1}:</strong> {chofer}</p>
-                                                                        ))}
+                                                                    {unidad.choferes.map((chofer, choferIdx) => (
+                                                                        chofer && <p key={choferIdx}><strong>Chofer {choferIdx + 1}:</strong> {chofer}</p>
+                                                                    ))}
                                                                 </div>
                                                             ))}
 
@@ -378,13 +412,18 @@ function App() {
                             value={formData.cliente}
                             onChange={handleInputChange}
                         />
-                        <label>Servicio:</label>
-                        <input
-                            type="text"
-                            name="servicio"
-                            value={formData.servicio}
+                        <label>Tipo de Servicio:</label>
+                        <select
+                            name="tipoServicio"
+                            value={formData.tipoServicio}
                             onChange={handleInputChange}
-                        />
+                        >
+                            <option value="">Seleccionar</option>
+                            <option value="IN OUT">IN OUT</option>
+                            <option value="SUBIDA">SUBIDA</option>
+                            <option value="BAJADA">BAJADA</option>
+                            <option value="STAND BY">STAND BY</option>
+                        </select>
 
                         {formData.unidades.map((unidad, index) => (
                             <div key={index} className="unidad-box">
@@ -404,6 +443,9 @@ function App() {
                                         />
                                     </div>
                                 ))}
+                                <button onClick={() => removeUnidad(index)} className="button cancel-btn">
+                                    Eliminar Unidad
+                                </button>
                             </div>
                         ))}
 
@@ -448,7 +490,7 @@ function App() {
                 )}
 
                 {expandedService && (
-                    <div className="modal-backdrop" onClick={() => setExpandedService(null)}>
+                    <div className="modal" onClick={() => setExpandedService(null)}>
                         <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                             <h2>Detalles del Servicio</h2>
                             <p><strong>Cliente:</strong> {expandedService.cliente}</p>
