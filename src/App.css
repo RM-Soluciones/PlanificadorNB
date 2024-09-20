@@ -1,0 +1,193 @@
+/* General */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Arial', sans-serif;
+  background-color: #f4f4f9;
+}
+
+/* Cabecera del mes */
+h2 {
+  text-align: center;
+  font-size: 1.8em;
+  margin-top: 10px;
+  color: #007bff;
+}
+
+/* Carrusel */
+.slider-container {
+  overflow: hidden;
+  padding: 20px;
+}
+
+.slick-slider {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  user-select: none;
+  touch-action: pan-y;
+}
+
+.slick-list {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.slick-track {
+  display: flex;
+}
+
+/* Separar más los días en el carrusel */
+.day-card {
+  flex: 0 0 auto;
+  background-color: white;
+  border-radius: 8px;
+  margin: 0 20px; /* Aumentamos el margen lateral para separar los días */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  min-width: 180px;
+  padding: 10px;
+}
+
+/* Ajustes específicos para pantallas medianas (tablets) */
+@media (max-width: 1024px) {
+  .day-card {
+    min-width: 150px; /* Ajuste para que se vean 4 tarjetas cómodamente */
+  }
+}
+
+
+.day-card-content h3 {
+  font-size: 1.2em;
+}
+
+/* Tarjetas de servicios */
+.service-card {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: left;
+}
+
+.service-card p {
+  margin: 5px 0;
+}
+
+.service-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.add-service-btn, .button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.add-service-btn:hover, .button:hover {
+  background-color: #0056b3;
+}
+
+/* Formulario */
+.form-container {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow-y: auto; /* Permitir desplazamiento */
+  max-height: 90vh;
+}
+
+.form-container input[type="text"],
+.form-container input[type="time"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  font-size: 1em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.modal-content h2 {
+  font-size: 1.6em;
+  margin-bottom: 20px;
+}
+
+/* Botones de navegación */
+.buttons {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px 0;
+}
+
+@media (max-width: 768px) {
+  .slick-track {
+    display: block;
+  }
+
+  .day-card {
+    min-width: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .day-card {
+    min-width: 120px;
+  }
+
+  .slick-slider {
+    overflow-x: scroll;
+  }
+}
+/* Ajustes específicos para pantallas móviles */
+@media (max-width: 768px) {
+  .day-card {
+    min-width: 140px; /* Reducimos el tamaño de las tarjetas en pantallas pequeñas */
+  }
+
+  .slick-slider {
+    overflow-x: scroll;
+  }
+}
