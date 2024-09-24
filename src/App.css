@@ -184,6 +184,7 @@ body {
     padding: 10px;
     border-radius: 8px;
     margin-bottom: 10px;
+    position: relative;
 }
 
 .service-card p {
@@ -198,6 +199,20 @@ body {
 
 .service-card.clickable:hover {
     transform: scale(1.02);
+}
+
+/* Semáforo */
+.service-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.semaforo {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    margin-left: 10px;
 }
 
 /* Botones de navegación en los extremos */

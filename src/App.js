@@ -9,54 +9,13 @@ import Select from 'react-select';
 const choferesList = [
     "CARLOS SARAPURA",
     "MAXIMILIANO MENDOZA",
-    "MORALES COPA",
-    "ROJAS JORGE",
-    "VELEZ JORGE",
-    "MAMANI FEDERICO",
-    "CRUZ DARDO",
-    "CALA ISMAEL GABRIEL",
-    "GUZMAN EMANUEL",
-    "CORONEL CARLOS",
-    "SOLIS OMAR",
-    "RIOS LEONARDO",
-    "SANCHEZ ADRIAN",
-    "FLORES DIEGO",
-    "FRANCISCO MAMANI",
-    "HOYOS SERRUDO ARMANDO",
-    "PEGINI YAGO",
-    "DE ZUANI HERNAN",
-    "AVENDAÑO NAHUEL",
-    "ARJONA CRISTIAN",
-    "RAVAZA CARLOS",
-    "MARTINEZ SIMÓN",
-    "ARRATIA ROJAS FRANCISCO",
-    "DIAZ MARCOS GABRIEL",
-    "SALVATIERRA DARIO RAUL",
-    "SALAS LUIS",
-    "APARICIO LEONEL",
-    "GALLARDO LUIS"
+    // ... (resto de los nombres)
 ];
 
 const movilesList = [
     "M33",
     "M09",
-    "M14",
-    "M16",
-    "M18",
-    "M19",
-    "M20",
-    "M21",
-    "M22",
-    "M24",
-    "M25",
-    "M26",
-    "M28",
-    "M30",
-    "M34",
-    "M35",
-    "M36",
-    "M37",
-    "M38"
+    // ... (resto de los móviles)
 ];
 
 // Crear opciones para react-select
@@ -69,6 +28,13 @@ const servicioOptions = [
     { value: 'SUBIDA', label: 'SUBIDA', color: '#27AE60' },     // VERDE
     { value: 'BAJADA', label: 'BAJADA', color: '#EB5757' },     // ROJO
     { value: 'STAND BY', label: 'STAND BY', color: '#F2C94C' }  // AMARILLO
+];
+
+// Opciones de estado para el semáforo
+const estadoOptions = [
+    { value: 'Pendiente', label: 'Pendiente', color: '#EB5757' },    // Rojo
+    { value: 'En Proceso', label: 'En Proceso', color: '#F2C94C' },  // Amarillo
+    { value: 'Completado', label: 'Completado', color: '#27AE60' },  // Verde
 ];
 
 // Funciones auxiliares
@@ -92,6 +58,7 @@ const getMonthName = (month) => {
 const initialFormData = {
     cliente: '',
     servicio: null,
+    estado: 'Pendiente',
     unidades: [{ movil: '', choferes: ['', '', ''] }],
     origen: '',
     destino: '',
@@ -136,6 +103,10 @@ const ServiceCard = ({ service, setExpandedService }) => {
     const serviceOption = servicioOptions.find(option => option.value === service.servicio);
     const serviceColor = serviceOption ? serviceOption.color : '#FFFFFF';
 
+    // Obtener el color del estado para el semáforo
+    const estadoOption = estadoOptions.find(option => option.value === service.estado);
+    const estadoColor = estadoOption ? estadoOption.color : '#FFFFFF';
+
     // Manejar el clic en la tarjeta
     const handleCardClick = () => {
         setExpandedService(service);
@@ -147,18 +118,26 @@ const ServiceCard = ({ service, setExpandedService }) => {
             style={{ backgroundColor: serviceColor }}
             onClick={handleCardClick}
         >
-            <p>
-                <strong>{service.cliente}</strong> - {serviceOption?.label}
-            </p>
+            <div className="service-card-header">
+                <p>
+                    <strong>{service.cliente}</strong> - {serviceOption?.label}
+                </p>
+                {/* Semáforo */}
+                <div
+                    className="semaforo"
+                    style={{ backgroundColor: estadoColor }}
+                    title={service.estado}
+                ></div>
+            </div>
             {service.unidades?.map((unidad, idx) => (
                 <div key={idx}>
                     <p>
-                        <strong>Móvil:</strong> <strong>{unidad.movil}</strong> - {unidad.choferes.filter(Boolean).join(', ')}
+                        <strong>Móvil:</strong> {unidad.movil} - {unidad.choferes.filter(Boolean).join(', ')}
                     </p>
                 </div>
             ))}
             <p>
-                <strong>Origen y Destino:</strong> {service.origen} - {service.destino}
+                {service.origen} - {service.destino}
             </p>
         </div>
     );
@@ -233,6 +212,13 @@ const ServiceForm = ({
                 onChange={(selectedOption) => setFormData({ ...formData, servicio: selectedOption.value })}
                 value={servicioOptions.find(option => option.value === formData.servicio)}
                 placeholder="Seleccione un servicio..."
+            />
+            <label>Estado:</label>
+            <Select
+                options={estadoOptions}
+                onChange={(selectedOption) => setFormData({ ...formData, estado: selectedOption.value })}
+                value={estadoOptions.find(option => option.value === formData.estado)}
+                placeholder="Seleccione el estado..."
             />
 
             {formData.unidades.map((unidad, index) => (
@@ -318,12 +304,17 @@ const ServiceModal = ({ expandedService, setExpandedService, editService }) => {
     const serviceOption = servicioOptions.find(option => option.value === expandedService.servicio);
     const serviceColor = serviceOption ? serviceOption.color : '#FFFFFF';
 
+    // Obtener el color del estado para el semáforo
+    const estadoOption = estadoOptions.find(option => option.value === expandedService.estado);
+    const estadoColor = estadoOption ? estadoOption.color : '#FFFFFF';
+
     return (
         <div className="modal-backdrop" onClick={() => setExpandedService(null)}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ backgroundColor: serviceColor }}>
                 <h2>Detalles del Servicio</h2>
                 <p><strong>Cliente:</strong> {expandedService.cliente}</p>
                 <p><strong>Servicio:</strong> {serviceOption?.label}</p>
+                <p><strong>Estado:</strong> {expandedService.estado}</p>
                 {expandedService.unidades?.map((unidad, index) => (
                     <div key={index}>
                         <p><strong>Móvil:</strong> {unidad.movil}</p>
@@ -332,8 +323,7 @@ const ServiceModal = ({ expandedService, setExpandedService, editService }) => {
                         ))}
                     </div>
                 ))}
-                <p><strong>Origen:</strong> {expandedService.origen}</p>
-                <p><strong>Destino:</strong> {expandedService.destino}</p>
+                <p>{expandedService.origen} - {expandedService.destino}</p>
                 <p><strong>Horario:</strong> {expandedService.horario}</p>
                 <p><strong>Observaciones:</strong> {expandedService.observaciones}</p>
 
@@ -357,6 +347,7 @@ const ServiceModal = ({ expandedService, setExpandedService, editService }) => {
 function App() {
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth() + 1;
+    const currentDay = new Date().getDate();
 
     const [viewedMonthIndex, setViewedMonthIndex] = useState(currentMonth - 1);
     const [services, setServices] = useState({});
@@ -464,6 +455,21 @@ function App() {
         };
     }, []);
 
+    useEffect(() => {
+        // Desplazar al día actual
+        const scrollContainer = scrollContainerRef.current;
+        if (scrollContainer) {
+            const currentDayIndex = daysInYear.findIndex(day => day.month === currentMonth && day.day === currentDay);
+            if (currentDayIndex !== -1) {
+                const dayCardWidth = scrollContainer.scrollWidth / daysInYear.length;
+                scrollContainer.scrollTo({
+                    left: currentDayIndex * dayCardWidth,
+                    behavior: 'smooth',
+                });
+            }
+        }
+    }, [daysInYear, currentMonth, currentDay]);
+
     const saveServiceToDatabase = async (serviceData) => {
         // Extraer solo el valor de servicio para almacenar
         const dataToSave = {
@@ -548,7 +554,6 @@ function App() {
         saveServiceToDatabase(serviceData);
         setShowForm(null);
         setFormData(initialFormData);
-        // No actualizamos el estado local aquí
     };
 
     const updateService = () => {
