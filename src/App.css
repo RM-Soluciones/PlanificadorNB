@@ -1,222 +1,360 @@
+/* App.css */
+
+/* Variables de colores */
+:root {
+    --primary-color: #2F80ED;
+    --secondary-color: #56CCF2;
+    --accent-color: #BB6BD9;
+    --background-color: #F2F2F2;
+    --text-color: #333333;
+    --white-color: #FFFFFF;
+    --success-color: #27AE60;
+    --danger-color: #EB5757;
+    --grey-color: #BDBDBD;
+    --celeste-color: #7FC6E7;
+    --verde-color: #27AE60;
+    --rojo-color: #EB5757;
+    --amarillo-color: #F2C94C;
+}
+
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 /* Estilos generales */
 body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  background-color: #f0f0f0;
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
 }
 
 .app-container {
-  max-width: 90%;
-  margin: 0 auto;
-  padding: 20px;
+    max-width: 90%;  /* Ocupa el 90% del ancho de la pantalla */
+    margin: 0 auto;
+    padding: 20px;
 }
 
-/* Encabezado */
 .header {
-  background-color: #4a90e2;
-  color: white;
-  padding: 20px;
-  text-align: center;
-  margin-bottom: 20px;
+    text-align: center;
+    margin-bottom: 20px;
 }
 
-h1 {
-  margin: 0;
+.header h1 {
+    font-size: 2.5rem;
+    color: var(--primary-color);
 }
 
-/* Controles del slider */
-.slider-controls {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
+/* Controles y selectores */
+.month-viewing {
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 1.8rem;
+    color: var(--accent-color);
 }
 
-.button {
-  background-color: #4a90e2;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.button:hover {
-  background-color: #357abd;
-}
-
-.button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
-
-/* Selector de mes */
 .month-selector {
-  margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.month-selector label {
+    margin-right: 10px;
+    font-weight: bold;
 }
 
 .month-selector select {
-  padding: 5px;
-  font-size: 16px;
+    padding: 8px;
+    font-size: 1rem;
+    border: 1px solid var(--grey-color);
+    border-radius: 5px;
+    outline: none;
+    cursor: pointer;
 }
 
-/* Tarjetas de día */
+/* Botones */
+.button {
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    border: none;
+    padding: 12px 18px;
+    margin: 5px;
+    cursor: pointer;
+    border-radius: 50px;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.button:hover {
+    background-color: var(--secondary-color);
+}
+
+.button:disabled {
+    background-color: var(--grey-color);
+    cursor: not-allowed;
+}
+
+.add-service-btn {
+    background-color: var(--success-color);
+    margin-top: 10px;
+    width: 100%;
+}
+
+.add-service-btn:hover {
+    background-color: #219150;
+}
+
+.cancel-btn {
+    background-color: var(--danger-color);
+    width: 100%;
+}
+
+.close-btn {
+    background-color: var(--secondary-color);
+    width: 100%;
+}
+
+.add-more-btn {
+    background-color: var(--accent-color);
+    margin-top: 10px;
+    width: 100%;
+}
+
+/* Contenedor de desplazamiento horizontal */
+.slider-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.days-scroll-container {
+    display: flex;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding-bottom: 10px;
+    margin: 20px 0;
+    flex: 1;
+}
+
+.days-scroll-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.days-scroll-container::-webkit-scrollbar-thumb {
+    background-color: var(--grey-color);
+    border-radius: 4px;
+}
+
 .day-card {
-  background-color: white;
-  border-radius: 8px;
-  padding: 15px;
-  margin: 10px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    min-width: 250px;
+    max-width: 300px; /* Establecer un ancho máximo */
+    flex: 1 1 250px;  /* Permitir que la tarjeta crezca */
+    margin: 10px;     /* Ajustar el margen */
+    background-color: var(--white-color);
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.day-card h3 {
-  margin-top: 0;
-  color: #333;
+.day-card-content h3 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    color: var(--primary-color);
+    text-align: center;
 }
 
-/* Tarjetas de servicio */
+.service-list {
+    margin-top: 10px;
+}
+
 .service-card {
-  background-color: #f9f9f9;
-  border-radius: 4px;
-  padding: 10px;
-  margin-bottom: 10px;
+    /* Eliminamos el fondo predeterminado para permitir el inline style */
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
 }
 
 .service-card p {
-  margin: 5px 0;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
 }
 
-/* Botones dentro de las tarjetas de servicio */
 .service-card .button {
-  font-size: 12px;
-  padding: 5px 10px;
-  margin-right: 5px;
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+/* Botones de navegación en los extremos */
+.nav-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 50%;
+    font-size: 1rem;
+    z-index: 10;
+}
+
+.left-button {
+    left: -25px;
+}
+
+.right-button {
+    right: -25px;
+}
+
+.nav-button:hover {
+    background-color: var(--secondary-color);
 }
 
 /* Formulario */
 .form-container {
-  background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background-color: var(--white-color);
+    padding: 25px;
+    border-radius: 10px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.form-container h4 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+    font-size: 1.8rem;
 }
 
 .form-container label {
-  display: block;
-  margin-top: 10px;
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: var(--accent-color);
 }
 
 .form-container input,
 .form-container select {
-  width: 100%;
-  padding: 8px;
-  margin-top: 5px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-/* Botones del formulario */
-.save-btn {
-  background-color: #4caf50;
-}
-
-.cancel-btn {
-  background-color: #f44336;
-}
-
-.add-more-btn {
-  background-color: #ff9800;
-  margin-top: 10px;
-}
-
-/* Modal */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-content {
-  background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  max-width: 500px;
-  width: 90%;
-}
-
-/* Estilos responsivos */
-@media (max-width: 768px) {
-  .slider-controls {
-    flex-direction: column;
-  }
-
-  .button {
-    margin-bottom: 10px;
-  }
-
-  .day-card {
+    width: 100%;
     padding: 10px;
-  }
-}
-
-/* Estilos para el slider de react-slick */
-.slick-slider {
-  margin-bottom: 30px;
-}
-
-.slick-prev, .slick-next {
-  font-size: 0;
-  line-height: 0;
-  position: absolute;
-  top: 50%;
-  display: block;
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  transform: translate(0, -50%);
-  cursor: pointer;
-  color: transparent;
-  border: none;
-  outline: none;
-  background: transparent;
-}
-
-.slick-prev:before, .slick-next:before {
-  font-size: 20px;
-  line-height: 1;
-  opacity: .75;
-  color: #4a90e2;
-}
-
-/* Ajustes adicionales para mejorar la apariencia */
-.month-viewing {
-  text-align: center;
-  color: #333;
-  margin-bottom: 20px;
-}
-
-.add-service-btn {
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  cursor: pointer;
-  margin-bottom: 10px;
-}
-
-.completed-btn {
-  background-color: #4caf50;
+    margin-bottom: 15px;
+    border: 1px solid var(--grey-color);
+    border-radius: 5px;
+    font-size: 1rem;
+    outline: none;
 }
 
 .unidad-box {
-  border: 1px solid #ddd;
-  padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 4px;
+    border: 1px solid var(--grey-color);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    background-color: var(--background-color);
+}
+
+.unidad-box label {
+    margin-top: 10px;
+    color: var(--text-color);
+}
+
+.unidad-box input {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+/* Estilos para react-select */
+.css-1okebmr-indicatorSeparator {
+    display: none;
+}
+
+.css-1pahdxg-control {
+    border-color: var(--grey-color);
+    box-shadow: none;
+}
+
+.css-1pahdxg-control:hover {
+    border-color: var(--grey-color);
+}
+
+.css-26l3qy-menu {
+    z-index: 100;
+}
+
+.react-select__option--is-focused {
+    background-color: var(--background-color);
+}
+
+.react-select__option--is-selected {
+    background-color: var(--secondary-color);
+    color: var(--white-color);
+}
+
+/* Modal */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(52, 58, 64, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    /* Eliminamos el fondo predeterminado para permitir el inline style */
+    padding: 30px;
+    border-radius: 10px;
+    max-width: 500px;
+    width: 90%;
+    position: relative;
+}
+
+.modal-content h2 {
+    margin-bottom: 20px;
+    color: var(--primary-color);
+    font-size: 1.8rem;
+}
+
+.modal-content p {
+    margin-bottom: 10px;
+}
+
+.modal-content .close-btn {
+    margin-top: 20px;
+}
+
+/* Responsividad */
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 2rem;
+    }
+
+    .button {
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+
+    .month-viewing {
+        font-size: 1.5rem;
+    }
+
+    .day-card {
+        min-width: 200px;
+    }
+
+    .form-container {
+        padding: 20px;
+    }
+
+    .nav-button {
+        display: none;
+    }
 }
