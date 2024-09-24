@@ -1,3 +1,5 @@
+// App.js
+
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { supabase } from './supabaseClient';
 import "./App.css";
@@ -89,7 +91,7 @@ const getMonthName = (month) => {
 // Datos iniciales para el formulario
 const initialFormData = {
     cliente: '',
-    servicio: null, // Cambiamos a null para manejar objetos
+    servicio: null,
     unidades: [{ movil: '', choferes: ['', '', ''] }],
     origen: '',
     destino: '',
@@ -98,7 +100,7 @@ const initialFormData = {
 };
 
 // Componentes separados
-const DayCard = ({ dayData, dateKey, servicesForDay, addService, editService, setExpandedService }) => {
+const DayCard = ({ dayData, dateKey, servicesForDay, addService, setExpandedService }) => {
     const { day, dayOfWeek } = dayData;
     return (
         <div className="day-card">
@@ -118,7 +120,6 @@ const DayCard = ({ dayData, dateKey, servicesForDay, addService, editService, se
                                     service={service}
                                     index={index}
                                     dateKey={dateKey}
-                                    editService={editService}
                                     setExpandedService={setExpandedService}
                                 />
                             ))}
@@ -130,13 +131,22 @@ const DayCard = ({ dayData, dateKey, servicesForDay, addService, editService, se
     );
 };
 
-const ServiceCard = ({ service, dateKey, editService, setExpandedService }) => {
+const ServiceCard = ({ service, setExpandedService }) => {
     // Obtener el color asociado al tipo de servicio
     const serviceOption = servicioOptions.find(option => option.value === service.servicio);
     const serviceColor = serviceOption ? serviceOption.color : '#FFFFFF';
 
+    // Manejar el clic en la tarjeta
+    const handleCardClick = () => {
+        setExpandedService(service);
+    };
+
     return (
-        <div className="service-card" style={{ backgroundColor: serviceColor }}>
+        <div
+            className="service-card clickable"
+            style={{ backgroundColor: serviceColor }}
+            onClick={handleCardClick}
+        >
             <p>
                 <strong>{service.cliente}</strong> - {serviceOption?.label}
             </p>
@@ -147,18 +157,9 @@ const ServiceCard = ({ service, dateKey, editService, setExpandedService }) => {
                     </p>
                 </div>
             ))}
-            <button
-                className="button"
-                onClick={() => setExpandedService(service)}
-            >
-                Ver detalles
-            </button>
-            <button
-                className="button"
-                onClick={() => editService(service)}
-            >
-                Editar
-            </button>
+            <p>
+                <strong>Origen y Destino:</strong> {service.origen} - {service.destino}
+            </p>
         </div>
     );
 };
@@ -312,7 +313,7 @@ const ServiceForm = ({
     );
 };
 
-const ServiceModal = ({ expandedService, setExpandedService }) => {
+const ServiceModal = ({ expandedService, setExpandedService, editService }) => {
     // Obtener el color asociado al tipo de servicio
     const serviceOption = servicioOptions.find(option => option.value === expandedService.servicio);
     const serviceColor = serviceOption ? serviceOption.color : '#FFFFFF';
@@ -335,6 +336,16 @@ const ServiceModal = ({ expandedService, setExpandedService }) => {
                 <p><strong>Destino:</strong> {expandedService.destino}</p>
                 <p><strong>Horario:</strong> {expandedService.horario}</p>
                 <p><strong>Observaciones:</strong> {expandedService.observaciones}</p>
+
+                <button
+                    className="button edit-btn"
+                    onClick={() => {
+                        editService(expandedService);
+                        setExpandedService(null);
+                    }}
+                >
+                    Editar
+                </button>
                 <button className="button close-btn" onClick={() => setExpandedService(null)}>
                     Cerrar
                 </button>
@@ -467,6 +478,7 @@ function App() {
         if (error) {
             console.error('Error al guardar el servicio:', error);
         }
+        // No actualizamos el estado local aquí
     };
 
     const updateServiceInDatabase = async (serviceData) => {
@@ -536,6 +548,7 @@ function App() {
         saveServiceToDatabase(serviceData);
         setShowForm(null);
         setFormData(initialFormData);
+        // No actualizamos el estado local aquí
     };
 
     const updateService = () => {
@@ -566,13 +579,21 @@ function App() {
         setViewedMonthIndex(selectedMonth);
         const firstDayOfMonthIndex = daysInYear.findIndex(day => day.month === selectedMonth + 1 && day.day === 1);
         const scrollContainer = scrollContainerRef.current;
-        const dayCardWidth = 250; // Ancho aproximado de cada tarjeta de día, ajusta según sea necesario
         if (scrollContainer) {
+            const dayCardWidth = scrollContainer.clientWidth / getDaysPerView();
             scrollContainer.scrollTo({
                 left: firstDayOfMonthIndex * dayCardWidth,
                 behavior: 'smooth'
             });
         }
+    };
+
+    const getDaysPerView = () => {
+        const width = window.innerWidth;
+        if (width <= 480) return 1;
+        if (width <= 768) return 2;
+        if (width <= 1200) return 4;
+        return 6;
     };
 
     const displayedMonthName = getMonthName(viewedMonthIndex + 1);
@@ -584,10 +605,10 @@ function App() {
     };
 
     // Funciones para los botones de navegación
-    const dayCardWidth = 250; // Ancho de una tarjeta de día
     const scrollLeft = () => {
         const scrollContainer = scrollContainerRef.current;
         if (scrollContainer) {
+            const dayCardWidth = scrollContainer.clientWidth / getDaysPerView();
             scrollContainer.scrollBy({
                 left: -dayCardWidth,
                 behavior: 'smooth',
@@ -598,6 +619,7 @@ function App() {
     const scrollRight = () => {
         const scrollContainer = scrollContainerRef.current;
         if (scrollContainer) {
+            const dayCardWidth = scrollContainer.clientWidth / getDaysPerView();
             scrollContainer.scrollBy({
                 left: dayCardWidth,
                 behavior: 'smooth',
@@ -643,7 +665,6 @@ function App() {
                                         dateKey={dateKey}
                                         servicesForDay={servicesForDay}
                                         addService={addService}
-                                        editService={editService}
                                         setExpandedService={setExpandedService}
                                     />
                                 );
@@ -679,6 +700,7 @@ function App() {
                 <ServiceModal
                     expandedService={expandedService}
                     setExpandedService={setExpandedService}
+                    editService={editService}
                 />
             )}
         </div>

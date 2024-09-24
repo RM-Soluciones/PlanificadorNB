@@ -32,7 +32,8 @@ body {
 }
 
 .app-container {
-    max-width: 90%;  /* Ocupa el 90% del ancho de la pantalla */
+    width: 90%;    /* Ocupa el 90% del ancho de la pantalla */
+    max-width: 90%;
     margin: 0 auto;
     padding: 20px;
 }
@@ -124,6 +125,15 @@ body {
     width: 100%;
 }
 
+.edit-btn {
+    background-color: var(--accent-color);
+    margin-bottom: 10px;
+}
+
+.edit-btn:hover {
+    background-color: #9b59b6;
+}
+
 /* Contenedor de desplazamiento horizontal */
 .slider-container {
     position: relative;
@@ -137,7 +147,6 @@ body {
     scroll-behavior: smooth;
     padding-bottom: 10px;
     margin: 20px 0;
-    flex: 1;
 }
 
 .days-scroll-container::-webkit-scrollbar {
@@ -149,14 +158,14 @@ body {
     border-radius: 4px;
 }
 
+/* Tarjetas de día */
 .day-card {
-    min-width: 250px;
-    max-width: 300px; /* Establecer un ancho máximo */
-    flex: 1 1 250px;  /* Permitir que la tarjeta crezca */
-    margin: 10px;     /* Ajustar el margen */
+    flex: 0 0 calc(100% / 6 - 10px); /* Mostrar 6 tarjetas por fila */
+    margin: 5px;
     background-color: var(--white-color);
     border-radius: 10px;
     padding: 15px;
+    box-sizing: border-box;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
@@ -172,7 +181,6 @@ body {
 }
 
 .service-card {
-    /* Eliminamos el fondo predeterminado para permitir el inline style */
     padding: 10px;
     border-radius: 8px;
     margin-bottom: 10px;
@@ -183,9 +191,13 @@ body {
     margin-bottom: 5px;
 }
 
-.service-card .button {
-    font-size: 0.9rem;
-    margin-top: 5px;
+.service-card.clickable {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.service-card.clickable:hover {
+    transform: scale(1.02);
 }
 
 /* Botones de navegación en los extremos */
@@ -309,7 +321,6 @@ body {
 }
 
 .modal-content {
-    /* Eliminamos el fondo predeterminado para permitir el inline style */
     padding: 30px;
     border-radius: 10px;
     max-width: 500px;
@@ -332,26 +343,25 @@ body {
 }
 
 /* Responsividad */
-@media (max-width: 768px) {
-    .header h1 {
-        font-size: 2rem;
-    }
 
-    .button {
-        padding: 10px 15px;
-        font-size: 0.9rem;
-    }
-
-    .month-viewing {
-        font-size: 1.5rem;
-    }
-
+/* Pantallas medianas: mostrar 4 días */
+@media (max-width: 1200px) {
     .day-card {
-        min-width: 200px;
+        flex: 0 0 calc(100% / 4 - 10px); /* Mostrar 4 tarjetas */
     }
+}
 
-    .form-container {
-        padding: 20px;
+/* Pantallas pequeñas: mostrar 2 días */
+@media (max-width: 768px) {
+    .day-card {
+        flex: 0 0 calc(100% / 2 - 10px); /* Mostrar 2 tarjetas */
+    }
+}
+
+/* Pantallas muy pequeñas: mostrar 1 día */
+@media (max-width: 480px) {
+    .day-card {
+        flex: 0 0 100%; /* Mostrar 1 tarjeta */
     }
 
     .nav-button {
