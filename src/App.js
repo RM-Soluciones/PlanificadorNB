@@ -4,20 +4,64 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { supabase } from './supabaseClient';
 import "./App.css";
 import Select from 'react-select';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 // Listas de choferes y móviles
 const choferesList = [
     "CARLOS SARAPURA",
     "MAXIMILIANO MENDOZA",
-    // ... (resto de los nombres)
+    "DANIEL LOBATO",
+    "FELIPE BIANCHINI",
+    "IGNACIO FARFALETTA",
+    "LUCAS ORTIZ",
+    "LEANDRO GONZALEZ",
+    "NATALIA BELLACASA",
+    "MARCOS MONTI",
+    "GONZALO DE LA CRUZ",
+    "ALFONSO MENENDEZ",
+    "FABIAN PALAZZO",
+    "FRANCISCO REYNA",
+    "MARTIN MANZA",
+    "RODRIGO BERTONA",
+    "FERNANDO SCHMITZ",
+    "ROGER MORA",
+    "NICOLAS SAN FELIPE",
+    "NICOLAS ARRIETA",
+    "PAULA CARABALLO",
+    "ANTONIO VIDAL",
+    "JULIAN REYNA",
+    "MARTIN REYNA"
 ];
 
 const movilesList = [
     "M33",
     "M09",
-    // ... (resto de los móviles)
+    "M01",
+    "M05",
+    "M02",
+    "M06",
+    "M19",
+    "M07",
+    "M18",
+    "M12",
+    "M15",
+    "M16",
+    "M17",
+    "M20",
+    "M14",
+    "M21",
+    "M22",
+    "M13",
+    "M23",
+    "M24",
+    "M25",
+    "M26",
+    "M10",
+    "M11",
+    "M03",
+    "M04"
 ];
-
 // Crear opciones para react-select
 const choferesOptions = choferesList.map((chofer) => ({ value: chofer, label: chofer }));
 const movilesOptions = movilesList.map((movil) => ({ value: movil, label: movil }));
@@ -28,13 +72,6 @@ const servicioOptions = [
     { value: 'SUBIDA', label: 'SUBIDA', color: '#27AE60' },     // VERDE
     { value: 'BAJADA', label: 'BAJADA', color: '#EB5757' },     // ROJO
     { value: 'STAND BY', label: 'STAND BY', color: '#F2C94C' }  // AMARILLO
-];
-
-// Opciones de estado para el semáforo
-const estadoOptions = [
-    { value: 'Pendiente', label: 'Pendiente', color: '#EB5757' },    // Rojo
-    { value: 'En Proceso', label: 'En Proceso', color: '#F2C94C' },  // Amarillo
-    { value: 'Completado', label: 'Completado', color: '#27AE60' },  // Verde
 ];
 
 // Funciones auxiliares
@@ -58,7 +95,6 @@ const getMonthName = (month) => {
 const initialFormData = {
     cliente: '',
     servicio: null,
-    estado: 'Pendiente',
     unidades: [{ movil: '', choferes: ['', '', ''] }],
     origen: '',
     destino: '',
@@ -66,28 +102,49 @@ const initialFormData = {
     observaciones: ''
 };
 
+// Función para formatear la fecha en YYYY-MM-DD
+const formatDateForInput = (date) => {
+    const offset = date.getTimezoneOffset();
+    const localDate = new Date(date.getTime() - offset * 60 * 1000);
+    return localDate.toISOString().split('T')[0];
+};
+
 // Componentes separados
-const DayCard = ({ dayData, dateKey, servicesForDay, addService, setExpandedService }) => {
-    const { day, dayOfWeek } = dayData;
+
+const DayCard = ({ dayData, dateKey, servicesForDay, addService, setExpandedService, filters, services, isAuthenticated }) => {
+    const { day, dayOfWeek, month, year } = dayData;
+
+    // Filtrar los servicios según los filtros seleccionados
+    const filteredServices = servicesForDay?.filter(service => {
+        // Filtrar por chofer
+        const matchesChofer = filters.chofer ? service.unidades.some(unidad => unidad.choferes.includes(filters.chofer)) : true;
+        // Filtrar por móvil
+        const matchesMovil = filters.movil ? service.unidades.some(unidad => unidad.movil === filters.movil) : true;
+        return matchesChofer && matchesMovil;
+    });
+
     return (
         <div className="day-card">
             <div className="day-card-content">
                 <h3>{`${dayOfWeek} ${day}`}</h3>
 
-                <button className="add-service-btn" onClick={() => addService(dateKey)}>
-                    + Servicio
-                </button>
+                {isAuthenticated && (
+                    <button className="add-service-btn" onClick={() => addService(dateKey)}>
+                        + Servicio
+                    </button>
+                )}
 
                 <div className="service-list">
-                    {servicesForDay && servicesForDay.length > 0 && (
+                    {filteredServices && filteredServices.length > 0 && (
                         <div className="service-list-items">
-                            {servicesForDay.map((service, index) => (
+                            {filteredServices.map((service, index) => (
                                 <ServiceCard
                                     key={service.id}
                                     service={service}
                                     index={index}
                                     dateKey={dateKey}
                                     setExpandedService={setExpandedService}
+                                    services={services}
                                 />
                             ))}
                         </div>
@@ -103,10 +160,6 @@ const ServiceCard = ({ service, setExpandedService }) => {
     const serviceOption = servicioOptions.find(option => option.value === service.servicio);
     const serviceColor = serviceOption ? serviceOption.color : '#FFFFFF';
 
-    // Obtener el color del estado para el semáforo
-    const estadoOption = estadoOptions.find(option => option.value === service.estado);
-    const estadoColor = estadoOption ? estadoOption.color : '#FFFFFF';
-
     // Manejar el clic en la tarjeta
     const handleCardClick = () => {
         setExpandedService(service);
@@ -118,27 +171,21 @@ const ServiceCard = ({ service, setExpandedService }) => {
             style={{ backgroundColor: serviceColor }}
             onClick={handleCardClick}
         >
-            <div className="service-card-header">
-                <p>
-                    <strong>{service.cliente}</strong> - {serviceOption?.label}
-                </p>
-                {/* Semáforo */}
-                <div
-                    className="semaforo"
-                    style={{ backgroundColor: estadoColor }}
-                    title={service.estado}
-                ></div>
-            </div>
+            {/* Cliente, Tipo de Servicio */}
+            <p>{service.cliente}, {serviceOption?.label}</p>
+
+            {/* Móvil (en negritas y destacado), Choferes */}
             {service.unidades?.map((unidad, idx) => (
-                <div key={idx}>
-                    <p>
-                        <strong>Móvil:</strong> {unidad.movil} - {unidad.choferes.filter(Boolean).join(', ')}
-                    </p>
-                </div>
+                <p key={idx}>
+                    <strong className="movil-highlight">{unidad.movil}</strong>, {unidad.choferes.filter(Boolean).join(', ')}
+                </p>
             ))}
-            <p>
-                {service.origen} - {service.destino}
-            </p>
+
+            {/* Origen - Destino */}
+            <p>{service.origen} - {service.destino}</p>
+
+            {/* Horario */}
+            <p>{service.horario}</p>
         </div>
     );
 };
@@ -167,15 +214,16 @@ const ServiceForm = ({
         const dateKey = `${year}-${month}-${day}`;
         const servicesForDay = services[dateKey] || [];
         servicesForDay.forEach((service) => {
+            if (editingService && service.id === editingService.id) return; // Ignorar el servicio que se está editando
             service.unidades.forEach((unidad) => {
                 if (type === 'chofer') {
                     unidad.choferes.forEach((chofer) => {
-                        if (chofer === name && (editingService ? service.id !== editingService.id : true)) {
+                        if (chofer === name) {
                             isOccupied = true;
                         }
                     });
                 } else if (type === 'movil') {
-                    if (unidad.movil === name && (editingService ? service.id !== editingService.id : true)) {
+                    if (unidad.movil === name) {
                         isOccupied = true;
                     }
                 }
@@ -213,13 +261,6 @@ const ServiceForm = ({
                 value={servicioOptions.find(option => option.value === formData.servicio)}
                 placeholder="Seleccione un servicio..."
             />
-            <label>Estado:</label>
-            <Select
-                options={estadoOptions}
-                onChange={(selectedOption) => setFormData({ ...formData, estado: selectedOption.value })}
-                value={estadoOptions.find(option => option.value === formData.estado)}
-                placeholder="Seleccione el estado..."
-            />
 
             {formData.unidades.map((unidad, index) => (
                 <div key={index} className="unidad-box">
@@ -231,7 +272,7 @@ const ServiceForm = ({
                             isOccupied: getAvailability('movil', movil.value),
                         }))}
                         styles={customStyles}
-                        onChange={(selectedOption) => handleArrayInputChange({ target: { value: selectedOption.value } }, index, 'movil', 'unidades')}
+                        onChange={(selectedOption) => handleArrayInputChange(selectedOption.value, index, 'movil', 'unidades')}
                         value={movilesOptions.find((movil) => movil.value === unidad.movil)}
                         placeholder="Seleccione un móvil..."
                     />
@@ -245,7 +286,7 @@ const ServiceForm = ({
                                     isOccupied: getAvailability('chofer', choferOption.value),
                                 }))}
                                 styles={customStyles}
-                                onChange={(selectedOption) => handleChoferInputChange({ target: { value: selectedOption.value } }, index, choferIndex)}
+                                onChange={(selectedOption) => handleChoferInputChange(selectedOption.value, index, choferIndex)}
                                 value={choferesOptions.find((c) => c.value === choferValue)}
                                 placeholder="Seleccione un chofer..."
                             />
@@ -299,14 +340,10 @@ const ServiceForm = ({
     );
 };
 
-const ServiceModal = ({ expandedService, setExpandedService, editService }) => {
+const ServiceModal = ({ expandedService, setExpandedService, editService, isAuthenticated }) => {
     // Obtener el color asociado al tipo de servicio
     const serviceOption = servicioOptions.find(option => option.value === expandedService.servicio);
     const serviceColor = serviceOption ? serviceOption.color : '#FFFFFF';
-
-    // Obtener el color del estado para el semáforo
-    const estadoOption = estadoOptions.find(option => option.value === expandedService.estado);
-    const estadoColor = estadoOption ? estadoOption.color : '#FFFFFF';
 
     return (
         <div className="modal-backdrop" onClick={() => setExpandedService(null)}>
@@ -314,29 +351,137 @@ const ServiceModal = ({ expandedService, setExpandedService, editService }) => {
                 <h2>Detalles del Servicio</h2>
                 <p><strong>Cliente:</strong> {expandedService.cliente}</p>
                 <p><strong>Servicio:</strong> {serviceOption?.label}</p>
-                <p><strong>Estado:</strong> {expandedService.estado}</p>
                 {expandedService.unidades?.map((unidad, index) => (
                     <div key={index}>
-                        <p><strong>Móvil:</strong> {unidad.movil}</p>
+                        <p><strong>Móvil:</strong> <span className="movil-highlight-modal">{unidad.movil}</span></p>
                         {unidad.choferes.map((chofer, choferIndex) => (
                             <p key={choferIndex}><strong>Chofer {choferIndex + 1}:</strong> {chofer}</p>
                         ))}
                     </div>
                 ))}
-                <p>{expandedService.origen} - {expandedService.destino}</p>
+                <p><strong>Origen:</strong> {expandedService.origen} - <strong>Destino:</strong> {expandedService.destino}</p>
                 <p><strong>Horario:</strong> {expandedService.horario}</p>
                 <p><strong>Observaciones:</strong> {expandedService.observaciones}</p>
 
-                <button
-                    className="button edit-btn"
-                    onClick={() => {
-                        editService(expandedService);
-                        setExpandedService(null);
-                    }}
-                >
-                    Editar
-                </button>
+                {isAuthenticated && (
+                    <button
+                        className="button edit-btn"
+                        onClick={() => {
+                            editService(expandedService);
+                            setExpandedService(null);
+                        }}
+                    >
+                        Editar
+                    </button>
+                )}
                 <button className="button close-btn" onClick={() => setExpandedService(null)}>
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    );
+};
+
+const Semaforo = ({ selectedDate, choferesList, movilesList, services }) => {
+    // Formatear la fecha seleccionada
+    const year = selectedDate.getFullYear();
+    const month = selectedDate.getMonth() + 1; // Los meses en JavaScript van de 0 a 11
+    const day = selectedDate.getDate();
+    const dateKey = `${year}-${month}-${day}`;
+
+    const servicesForDay = services[dateKey] || [];
+
+    // Obtener listas de choferes y móviles ocupados
+    const choferesOcupados = new Set();
+    const movilesOcupados = new Set();
+
+    servicesForDay.forEach(service => {
+        service.unidades.forEach(unidad => {
+            if (unidad.movil) {
+                movilesOcupados.add(unidad.movil);
+            }
+            unidad.choferes.forEach(chofer => {
+                if (chofer) {
+                    choferesOcupados.add(chofer);
+                }
+            });
+        });
+    });
+
+    // Opciones para los selectores
+    const choferesSemaforoOptions = choferesList.map(chofer => ({
+        value: chofer,
+        label: chofer,
+        isOccupied: choferesOcupados.has(chofer)
+    }));
+
+    const movilesSemaforoOptions = movilesList.map(movil => ({
+        value: movil,
+        label: movil,
+        isOccupied: movilesOcupados.has(movil)
+    }));
+
+    // Estilos para react-select
+    const customStyles = {
+        option: (provided, { data }) => ({
+            ...provided,
+            color: data.isOccupied ? 'red' : 'green',
+        }),
+        multiValueLabel: (provided, { data }) => ({
+            ...provided,
+            color: data.isOccupied ? 'red' : 'green',
+        }),
+    };
+
+    return (
+        <div className="semaforo-dropdowns">
+            <h2>Disponibilidad para {day}/{month}/{year}</h2>
+            <div className="semaforo-dropdown">
+                <label>Choferes:</label>
+                <Select
+                    options={choferesSemaforoOptions}
+                    styles={customStyles}
+                    isMulti
+                    isClearable
+                    placeholder="Seleccione choferes..."
+                />
+            </div>
+            <div className="semaforo-dropdown">
+                <label>Móviles:</label>
+                <Select
+                    options={movilesSemaforoOptions}
+                    styles={customStyles}
+                    isMulti
+                    isClearable
+                    placeholder="Seleccione móviles..."
+                />
+            </div>
+        </div>
+    );
+};
+
+const LoginForm = ({ handleLogin, setShowLoginForm }) => {
+    const [password, setPassword] = useState('');
+
+    const onSubmit = (e) => {
+        e.preventDefault();
+        handleLogin(password);
+    };
+
+    return (
+        <div className="modal-backdrop" onClick={() => setShowLoginForm(false)}>
+            <div className="modal-content login-modal" onClick={(e) => e.stopPropagation()}>
+                <h2>Iniciar Sesión</h2>
+                <form onSubmit={onSubmit} className="login-form">
+                    <label>Contraseña:</label>
+                    <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <button type="submit" className="button login-submit-btn">Entrar</button>
+                </form>
+                <button className="button close-btn" onClick={() => setShowLoginForm(false)}>
                     Cerrar
                 </button>
             </div>
@@ -355,6 +500,17 @@ function App() {
     const [editingService, setEditingService] = useState(null);
     const [expandedService, setExpandedService] = useState(null);
     const [formData, setFormData] = useState(initialFormData);
+    const [filters, setFilters] = useState({ chofer: null, movil: null });
+    const [selectedSemaforoDate, setSelectedSemaforoDate] = useState(new Date());
+
+    const [reportType, setReportType] = useState('custom');
+    const [reportFilterType, setReportFilterType] = useState('cliente');
+    const [reportFilterValue, setReportFilterValue] = useState(null);
+    const [reportStartDate, setReportStartDate] = useState(null);
+    const [reportEndDate, setReportEndDate] = useState(null);
+
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [showLoginForm, setShowLoginForm] = useState(false);
 
     const daysInYear = useMemo(() => {
         let days = [];
@@ -379,13 +535,8 @@ function App() {
             const formattedServices = servicesData.reduce((acc, service) => {
                 const dateKey = `${service.year}-${service.month}-${service.day}`;
 
-                // Reconstruir el objeto servicio
-                const serviceOption = servicioOptions.find(option => option.value === service.servicio);
-                const servicio = serviceOption ? serviceOption.value : service.servicio;
-
                 const updatedService = {
                     ...service,
-                    servicio,
                 };
 
                 if (!acc[dateKey]) {
@@ -405,41 +556,44 @@ function App() {
             .channel('public:services')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'services' }, (payload) => {
                 console.log('Cambio en tiempo real:', payload);
-                const serviceData = payload.new;
-                const dateKey = `${serviceData.year}-${serviceData.month}-${serviceData.day}`;
-
-                // Reconstruir el objeto servicio
-                const serviceOption = servicioOptions.find(option => option.value === serviceData.servicio);
-                const servicio = serviceOption ? serviceOption.value : serviceData.servicio;
-
-                const updatedServiceData = {
-                    ...serviceData,
-                    servicio,
-                };
+                const oldServiceData = payload.old || {};
+                const newServiceData = payload.new || {};
+                const oldDateKey = `${oldServiceData.year}-${oldServiceData.month}-${oldServiceData.day}`;
+                const newDateKey = `${newServiceData.year}-${newServiceData.month}-${newServiceData.day}`;
 
                 setServices((prevServices) => {
                     const updatedServices = { ...prevServices };
                     switch (payload.eventType) {
                         case 'INSERT':
-                            if (!updatedServices[dateKey]) {
-                                updatedServices[dateKey] = [];
+                            if (!updatedServices[newDateKey]) {
+                                updatedServices[newDateKey] = [];
                             }
-                            updatedServices[dateKey].push(updatedServiceData);
+                            updatedServices[newDateKey].push(newServiceData);
                             break;
                         case 'UPDATE':
-                            if (updatedServices[dateKey]) {
-                                updatedServices[dateKey] = updatedServices[dateKey].map((service) =>
-                                    service.id === updatedServiceData.id ? updatedServiceData : service
-                                );
-                            }
-                            break;
-                        case 'DELETE':
-                            const oldServiceData = payload.old;
-                            const oldDateKey = `${oldServiceData.year}-${oldServiceData.month}-${oldServiceData.day}`;
+                            // Eliminar del dateKey antiguo
                             if (updatedServices[oldDateKey]) {
                                 updatedServices[oldDateKey] = updatedServices[oldDateKey].filter(
                                     (service) => service.id !== oldServiceData.id
                                 );
+                                if (updatedServices[oldDateKey].length === 0) {
+                                    delete updatedServices[oldDateKey];
+                                }
+                            }
+                            // Agregar al nuevo dateKey
+                            if (!updatedServices[newDateKey]) {
+                                updatedServices[newDateKey] = [];
+                            }
+                            updatedServices[newDateKey].push(newServiceData);
+                            break;
+                        case 'DELETE':
+                            if (updatedServices[oldDateKey]) {
+                                updatedServices[oldDateKey] = updatedServices[oldDateKey].filter(
+                                    (service) => service.id !== oldServiceData.id
+                                );
+                                if (updatedServices[oldDateKey].length === 0) {
+                                    delete updatedServices[oldDateKey];
+                                }
                             }
                             break;
                         default:
@@ -456,9 +610,9 @@ function App() {
     }, []);
 
     useEffect(() => {
-        // Desplazar al día actual
+        // Desplazar al día actual solo al cargar la aplicación
         const scrollContainer = scrollContainerRef.current;
-        if (scrollContainer) {
+        if (scrollContainer && !showForm && !editingService && !expandedService) {
             const currentDayIndex = daysInYear.findIndex(day => day.month === currentMonth && day.day === currentDay);
             if (currentDayIndex !== -1) {
                 const dayCardWidth = scrollContainer.scrollWidth / daysInYear.length;
@@ -468,13 +622,12 @@ function App() {
                 });
             }
         }
-    }, [daysInYear, currentMonth, currentDay]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [daysInYear, currentMonth, currentDay, showForm, editingService, expandedService]);
 
     const saveServiceToDatabase = async (serviceData) => {
-        // Extraer solo el valor de servicio para almacenar
         const dataToSave = {
             ...serviceData,
-            servicio: serviceData.servicio,
         };
 
         const { error } = await supabase
@@ -484,14 +637,20 @@ function App() {
         if (error) {
             console.error('Error al guardar el servicio:', error);
         }
-        // No actualizamos el estado local aquí
     };
 
     const updateServiceInDatabase = async (serviceData) => {
-        // Extraer solo el valor de servicio para almacenar
         const dataToUpdate = {
-            ...serviceData,
+            cliente: serviceData.cliente,
             servicio: serviceData.servicio,
+            unidades: serviceData.unidades,
+            origen: serviceData.origen,
+            destino: serviceData.destino,
+            horario: serviceData.horario,
+            observaciones: serviceData.observaciones,
+            year: serviceData.year,
+            month: serviceData.month,
+            day: serviceData.day,
         };
 
         const { error } = await supabase
@@ -522,9 +681,9 @@ function App() {
         }));
     };
 
-    const handleArrayInputChange = (e, index, field, type) => {
+    const handleArrayInputChange = (value, index, field, type) => {
         const updatedData = formData[type].map((item, i) =>
-            i === index ? { ...item, [field]: e.target.value } : item
+            i === index ? { ...item, [field]: value } : item
         );
         setFormData((prevData) => ({
             ...prevData,
@@ -532,9 +691,9 @@ function App() {
         }));
     };
 
-    const handleChoferInputChange = (e, unidadIndex, choferIndex) => {
+    const handleChoferInputChange = (value, unidadIndex, choferIndex) => {
         const updatedChoferes = [...formData.unidades[unidadIndex].choferes];
-        updatedChoferes[choferIndex] = e.target.value;
+        updatedChoferes[choferIndex] = value;
         const updatedUnidades = [...formData.unidades];
         updatedUnidades[unidadIndex].choferes = updatedChoferes;
         setFormData((prevData) => ({
@@ -544,6 +703,8 @@ function App() {
     };
 
     const saveService = () => {
+        if (!showForm) return; // Prevent if no dateKey
+
         const [year, month, day] = showForm.split('-');
         const serviceData = {
             ...formData,
@@ -568,21 +729,26 @@ function App() {
     };
 
     const editService = (service) => {
-        // Configurar formData correctamente al editar
-        const serviceOption = servicioOptions.find(option => option.value === service.servicio);
-
         setFormData({
-            ...service,
-            servicio: serviceOption ? serviceOption.value : null,
+            cliente: service.cliente,
+            servicio: service.servicio,
+            unidades: service.unidades,
+            origen: service.origen,
+            destino: service.destino,
+            horario: service.horario,
+            observaciones: service.observaciones,
+            year: service.year,
+            month: service.month,
+            day: service.day,
         });
         setEditingService(service);
         setShowForm(`${service.year}-${service.month}-${service.day}`);
     };
 
     const jumpToMonth = (event) => {
-        const selectedMonth = parseInt(event.target.value, 10);
-        setViewedMonthIndex(selectedMonth);
-        const firstDayOfMonthIndex = daysInYear.findIndex(day => day.month === selectedMonth + 1 && day.day === 1);
+        const selectedMonth = parseInt(event.target.value, 10) + 1; // +1 porque los meses en JavaScript son 0-based
+        setViewedMonthIndex(selectedMonth - 1);
+        const firstDayOfMonthIndex = daysInYear.findIndex(day => day.month === selectedMonth && day.day === 1);
         const scrollContainer = scrollContainerRef.current;
         if (scrollContainer) {
             const dayCardWidth = scrollContainer.clientWidth / getDaysPerView();
@@ -597,8 +763,9 @@ function App() {
         const width = window.innerWidth;
         if (width <= 480) return 1;
         if (width <= 768) return 2;
-        if (width <= 1200) return 4;
-        return 6;
+        if (width <= 1200) return 5;
+        if (width >= 1600) return 8;
+        return 7;
     };
 
     const displayedMonthName = getMonthName(viewedMonthIndex + 1);
@@ -632,25 +799,253 @@ function App() {
         }
     };
 
+    // Manejo de filtros
+    const handleFilterChange = (selectedOption, filterType) => {
+        setFilters(prevFilters => ({
+            ...prevFilters,
+            [filterType]: selectedOption ? selectedOption.value : null
+        }));
+    };
+
+    // Manejo del cambio de fecha en el semáforo
+    const handleSemaforoDateChange = (e) => {
+        const selectedDate = new Date(e.target.value + 'T00:00:00');
+        setSelectedSemaforoDate(selectedDate);
+    };
+
+    // Función para generar informes en PDF
+    const generatePDFReport = () => {
+        if (!reportStartDate || !reportEndDate) {
+            alert('Por favor, seleccione una fecha de inicio y una fecha de fin para el informe.');
+            return;
+        }
+
+        let filteredServices = [];
+
+        // Filtrar servicios dentro del rango de fechas seleccionado
+        for (let dateKey in services) {
+            const [year, month, day] = dateKey.split('-').map(Number);
+            const serviceDate = new Date(year, month - 1, day);
+            if (serviceDate >= reportStartDate && serviceDate <= reportEndDate) {
+                filteredServices = filteredServices.concat(services[dateKey]);
+            }
+        }
+
+        // Aplicar filtro adicional (cliente, chofer o móvil)
+        if (reportFilterValue) {
+            filteredServices = filteredServices.filter(service => {
+                if (reportFilterType === 'cliente') {
+                    return service.cliente === reportFilterValue;
+                } else if (reportFilterType === 'chofer') {
+                    return service.unidades.some(unidad => unidad.choferes.includes(reportFilterValue));
+                } else if (reportFilterType === 'movil') {
+                    return service.unidades.some(unidad => unidad.movil === reportFilterValue);
+                }
+                return true;
+            });
+        }
+
+        if (filteredServices.length === 0) {
+            alert('No se encontraron servicios en el rango de fechas seleccionado.');
+            return;
+        }
+
+        // Generar el PDF
+        const doc = new jsPDF();
+        doc.setFontSize(18);
+        doc.text(`Informe desde ${reportStartDate.toLocaleDateString()} hasta ${reportEndDate.toLocaleDateString()}`, 14, 22);
+
+        const tableColumn = ["Fecha", "Cliente", "Servicio", "Unidades", "Origen", "Destino", "Horario", "Observaciones"];
+        const tableRows = [];
+
+        filteredServices.forEach(service => {
+            const serviceDate = `${service.day}/${service.month}/${service.year}`;
+            const unidades = service.unidades.map(unidad => {
+                const movil = `<span style="font-weight:bold; color:#1E90FF;">Móvil: ${unidad.movil}</span>`;
+                const choferes = unidad.choferes.filter(Boolean).map(chofer => `Chofer: ${chofer}`).join(", ");
+                return `${movil}, ${choferes}`;
+            }).join(" | ");
+
+            const rowData = [
+                serviceDate,
+                service.cliente,
+                service.servicio,
+                unidades,
+                service.origen,
+                service.destino,
+                service.horario,
+                service.observaciones
+            ];
+            tableRows.push(rowData);
+        });
+
+        doc.autoTable({
+            head: [tableColumn],
+            body: tableRows,
+            startY: 30,
+            styles: { fontSize: 10 },
+            columnStyles: {
+                3: { cellWidth: 'auto' } // "Unidades" column
+            },
+            didParseCell: function (data) {
+                if (data.column.index === 3) { // "Unidades" column
+                    data.cell.styles.fontStyle = 'bold';
+                }
+            }
+        });
+        doc.save(`informe_${reportStartDate.toLocaleDateString()}_al_${reportEndDate.toLocaleDateString()}.pdf`);
+    };
+
+    const handleLogin = (password) => {
+        const correctPassword = 'admin123'; // Reemplaza con la contraseña deseada
+        if (password === correctPassword) {
+            setIsAuthenticated(true);
+            setShowLoginForm(false);
+        } else {
+            alert('Contraseña incorrecta');
+        }
+    };
+
     return (
         <div className="app-container">
             <header className="header">
                 <h1>Planificación de Servicios</h1>
+                {!isAuthenticated && (
+                    <button className="button login-btn" onClick={() => setShowLoginForm(true)}>
+                        Iniciar Sesión
+                    </button>
+                )}
+                {isAuthenticated && (
+                    <button className="button logout-btn" onClick={() => setIsAuthenticated(false)}>
+                        Cerrar Sesión
+                    </button>
+                )}
             </header>
+
+            {showLoginForm && (
+                <LoginForm
+                    handleLogin={handleLogin}
+                    setShowLoginForm={setShowLoginForm}
+                />
+            )}
 
             {!showForm && (
                 <>
                     <h2 className="month-viewing">Visualizando: {displayedMonthName}</h2>
 
-                    <div className="month-selector">
-                        <label htmlFor="monthSelector">Ir al mes: </label>
-                        <select id="monthSelector" onChange={jumpToMonth} value={viewedMonthIndex}>
-                            {[...Array(12)].map((_, i) => (
-                                <option key={i} value={i}>
-                                    {getMonthName(i + 1)}
-                                </option>
-                            ))}
-                        </select>
+                    <div className="controls-container">
+                        {/* Selector de mes */}
+                        <div className="month-selector">
+                            <label htmlFor="monthSelector">Ir al mes: </label>
+                            <select id="monthSelector" onChange={jumpToMonth} value={viewedMonthIndex}>
+                                {[...Array(12)].map((_, i) => (
+                                    <option key={i} value={i}>
+                                        {getMonthName(i + 1)}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Filtros */}
+                        <div className="filters">
+                            <div className="filter">
+                                <label>Filtrar por Chofer:</label>
+                                <Select
+                                    options={choferesOptions}
+                                    onChange={(option) => handleFilterChange(option, 'chofer')}
+                                    isClearable
+                                    placeholder="Seleccione un chofer..."
+                                />
+                            </div>
+                            <div className="filter">
+                                <label>Filtrar por Móvil:</label>
+                                <Select
+                                    options={movilesOptions}
+                                    onChange={(option) => handleFilterChange(option, 'movil')}
+                                    isClearable
+                                    placeholder="Seleccione un móvil..."
+                                />
+                            </div>
+                        </div>
+
+                        {isAuthenticated && (
+                            <>
+                                {/* Semáforo y selector de fecha */}
+                                <div className="semaforo-section">
+                                    <div className="semaforo-date-selector">
+                                        <label>Seleccionar fecha para disponibilidad:</label>
+                                        <input
+                                            type="date"
+                                            value={formatDateForInput(selectedSemaforoDate)}
+                                            onChange={handleSemaforoDateChange}
+                                        />
+                                    </div>
+                                    <Semaforo
+                                        selectedDate={selectedSemaforoDate}
+                                        choferesList={choferesList}
+                                        movilesList={movilesList}
+                                        services={services}
+                                    />
+                                </div>
+
+                                {/* Generación de informes */}
+                                <div className="report-section">
+                                    <label>Generar informe:</label>
+                                    <div className="report-date-selectors">
+                                        <label>Fecha de inicio:</label>
+                                        <input
+                                            type="date"
+                                            value={reportStartDate ? formatDateForInput(reportStartDate) : ''}
+                                            onChange={(e) => setReportStartDate(new Date(e.target.value + 'T00:00:00'))}
+                                        />
+                                        <label>Fecha de fin:</label>
+                                        <input
+                                            type="date"
+                                            value={reportEndDate ? formatDateForInput(reportEndDate) : ''}
+                                            onChange={(e) => setReportEndDate(new Date(e.target.value + 'T23:59:59'))}
+                                        />
+                                    </div>
+
+                                    <select value={reportFilterType} onChange={(e) => { setReportFilterType(e.target.value); setReportFilterValue(null); }}>
+                                        <option value="cliente">Por Cliente</option>
+                                        <option value="chofer">Por Chofer</option>
+                                        <option value="movil">Por Móvil</option>
+                                    </select>
+
+                                    {reportFilterType === 'cliente' && (
+                                        <Select
+                                            options={[...new Set(Object.values(services).flat().map(s => s.cliente))].map(cliente => ({ value: cliente, label: cliente }))}
+                                            onChange={(option) => setReportFilterValue(option ? option.value : null)}
+                                            isClearable
+                                            placeholder="Seleccione un cliente..."
+                                            className="report-filter-select"
+                                        />
+                                    )}
+
+                                    {reportFilterType === 'chofer' && (
+                                        <Select
+                                            options={choferesOptions}
+                                            onChange={(option) => setReportFilterValue(option ? option.value : null)}
+                                            isClearable
+                                            placeholder="Seleccione un chofer..."
+                                            className="report-filter-select"
+                                        />
+                                    )}
+
+                                    {reportFilterType === 'movil' && (
+                                        <Select
+                                            options={movilesOptions}
+                                            onChange={(option) => setReportFilterValue(option ? option.value : null)}
+                                            isClearable
+                                            placeholder="Seleccione un móvil..."
+                                            className="report-filter-select"
+                                        />
+                                    )}
+
+                                    <button onClick={generatePDFReport} className="button report-btn">Generar Informe PDF</button>
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     {/* Botones de navegación en los extremos */}
@@ -660,7 +1055,7 @@ function App() {
                         </button>
 
                         <div id="days-scroll-container" className="days-scroll-container" ref={scrollContainerRef}>
-                            {daysInYear.map((dayData, index) => {
+                            {daysInYear.map((dayData) => {
                                 const dateKey = `${dayData.year}-${dayData.month}-${dayData.day}`;
                                 const servicesForDay = services[dateKey];
                                 return (
@@ -671,6 +1066,9 @@ function App() {
                                         servicesForDay={servicesForDay}
                                         addService={addService}
                                         setExpandedService={setExpandedService}
+                                        filters={filters}
+                                        services={services}
+                                        isAuthenticated={isAuthenticated}
                                     />
                                 );
                             })}
@@ -706,10 +1104,10 @@ function App() {
                     expandedService={expandedService}
                     setExpandedService={setExpandedService}
                     editService={editService}
+                    isAuthenticated={isAuthenticated}
                 />
             )}
         </div>
     );
 }
-
 export default App;
