@@ -226,7 +226,7 @@ body {
 
 /* Tarjetas de día */
 .day-card {
-    flex: 0 0 calc(100% / 7 - 10px); /* Mostrar 7 tarjetas por fila */
+    flex: 0 0 calc(100% / 7 - 10px); /* Cambiado de 8 a 7 tarjetas por fila */
     margin: 5px;
     background-color: var(--white-color);
     border-radius: 5px;
@@ -274,13 +274,13 @@ body {
 .movil-highlight {
     font-weight: bold;
     font-size: 1.1rem;
-    color: #1E2A38; /* Azul brillante */
+    color: #1E90FF; /* Azul brillante */
 }
 
 .movil-highlight-modal {
     font-weight: bold;
     font-size: 1.2rem;
-    color: #1E2A38; /* Azul brillante */
+    color: #1E90FF; /* Azul brillante */
 }
 
 /* Botones de navegación */
@@ -542,10 +542,10 @@ body {
 
 /* Responsividad */
 
-/* Pantallas grandes: mostrar 10 días */
+/* Pantallas grandes: mostrar 7 días */
 @media (min-width: 1600px) {
     .day-card {
-        flex: 0 0 calc(100% / 10 - 10px);
+        flex: 0 0 calc(100% / 7 - 10px);
     }
 }
 

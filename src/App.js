@@ -62,6 +62,7 @@ const movilesList = [
     "M03",
     "M04"
 ];
+
 // Crear opciones para react-select
 const choferesOptions = choferesList.map((chofer) => ({ value: chofer, label: chofer }));
 const movilesOptions = movilesList.map((movil) => ({ value: movil, label: movil }));
@@ -503,7 +504,6 @@ function App() {
     const [filters, setFilters] = useState({ chofer: null, movil: null });
     const [selectedSemaforoDate, setSelectedSemaforoDate] = useState(new Date());
 
-    const [reportType, setReportType] = useState('custom');
     const [reportFilterType, setReportFilterType] = useState('cliente');
     const [reportFilterValue, setReportFilterValue] = useState(null);
     const [reportStartDate, setReportStartDate] = useState(null);
@@ -571,15 +571,15 @@ function App() {
                             updatedServices[newDateKey].push(newServiceData);
                             break;
                         case 'UPDATE':
-                            // Eliminar del dateKey antiguo
-                            if (updatedServices[oldDateKey]) {
-                                updatedServices[oldDateKey] = updatedServices[oldDateKey].filter(
-                                    (service) => service.id !== oldServiceData.id
+                            // Eliminar de todos los dateKeys posibles
+                            Object.keys(updatedServices).forEach(key => {
+                                updatedServices[key] = updatedServices[key].filter(
+                                    (service) => service.id !== newServiceData.id
                                 );
-                                if (updatedServices[oldDateKey].length === 0) {
-                                    delete updatedServices[oldDateKey];
+                                if (updatedServices[key].length === 0) {
+                                    delete updatedServices[key];
                                 }
-                            }
+                            });
                             // Agregar al nuevo dateKey
                             if (!updatedServices[newDateKey]) {
                                 updatedServices[newDateKey] = [];
@@ -636,30 +636,46 @@ function App() {
 
         if (error) {
             console.error('Error al guardar el servicio:', error);
+            alert(`Error al guardar el servicio: ${error.message}`);
+        } else {
+            alert('Servicio guardado exitosamente.');
         }
     };
 
     const updateServiceInDatabase = async (serviceData) => {
-        const dataToUpdate = {
-            cliente: serviceData.cliente,
-            servicio: serviceData.servicio,
-            unidades: serviceData.unidades,
-            origen: serviceData.origen,
-            destino: serviceData.destino,
-            horario: serviceData.horario,
-            observaciones: serviceData.observaciones,
-            year: serviceData.year,
-            month: serviceData.month,
-            day: serviceData.day,
-        };
+        const { id, ...rest } = serviceData;
 
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('services')
-            .update(dataToUpdate)
-            .eq('id', serviceData.id);
+            .update(rest)
+            .eq('id', id);
 
         if (error) {
             console.error('Error al actualizar el servicio:', error);
+            alert(`Error al actualizar el servicio: ${error.message}`);
+        } else {
+            alert('Servicio actualizado exitosamente.');
+            // Actualizar el estado local
+            setServices(prevServices => {
+                const updatedServices = { ...prevServices };
+                const dateKey = `${rest.year}-${rest.month}-${rest.day}`;
+
+                // Remover el servicio de su ubicación anterior si cambió de fecha
+                Object.keys(updatedServices).forEach(key => {
+                    updatedServices[key] = updatedServices[key].filter(service => service.id !== id);
+                    if (updatedServices[key].length === 0) {
+                        delete updatedServices[key];
+                    }
+                });
+
+                // Añadir el servicio actualizado a la nueva fecha
+                if (!updatedServices[dateKey]) {
+                    updatedServices[dateKey] = [];
+                }
+                updatedServices[dateKey].push({ ...rest, id });
+
+                return updatedServices;
+            });
         }
     };
 
@@ -764,7 +780,7 @@ function App() {
         if (width <= 480) return 1;
         if (width <= 768) return 2;
         if (width <= 1200) return 5;
-        if (width >= 1600) return 8;
+        if (width >= 1600) return 7; // Cambiado de 8 a 7
         return 7;
     };
 
@@ -1110,4 +1126,5 @@ function App() {
         </div>
     );
 }
+
 export default App;
