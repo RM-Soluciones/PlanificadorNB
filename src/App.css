@@ -274,13 +274,13 @@ body {
 .movil-highlight {
     font-weight: bold;
     font-size: 1.1rem;
-    color: #1E90FF; /* Azul brillante */
+    color:  #1E2A38; /* Azul brillante */
 }
 
 .movil-highlight-modal {
     font-weight: bold;
     font-size: 1.2rem;
-    color: #1E90FF; /* Azul brillante */
+    color:  #1E2A38; /* Azul brillante */
 }
 
 /* Botones de navegación */
