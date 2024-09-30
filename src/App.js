@@ -341,6 +341,49 @@ const ServiceForm = ({
         </div>
     );
 };
+// Dentro del componente App
+
+const deleteService = async (serviceId, dateKey) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar este servicio?')) {
+        return;
+    }
+
+    const { error } = await supabase
+        .from('services')
+        .delete()
+        .eq('id', serviceId);
+
+    if (error) {
+        console.error('Error al eliminar el servicio:', error);
+        alert(`Error al eliminar el servicio: ${error.message}`);
+    } else {
+        alert('Servicio eliminado exitosamente.');
+        // Actualizar el estado local
+        setServices(prevServices => {
+            const updatedServices = { ...prevServices };
+            if (updatedServices[dateKey]) {
+                updatedServices[dateKey] = updatedServices[dateKey].filter(service => service.id !== serviceId);
+                if (updatedServices[dateKey].length === 0) {
+                    delete updatedServices[dateKey];
+                }
+            }
+            return updatedServices;
+        });
+        setExpandedService(null); // Cerrar el modal después de eliminar
+    }
+};
+
+{/* Dentro del componente App, en el renderizado */}
+{expandedService && (
+    <ServiceModal
+        expandedService={expandedService}
+        setExpandedService={setExpandedService}
+        editService={editService}
+        isAuthenticated={isAuthenticated}
+        deleteService={deleteService} // Pasar la función aquí
+    />
+)}
+
 
 const ServiceModal = ({ expandedService, setExpandedService, editService, isAuthenticated }) => {
     // Obtener el color asociado al tipo de servicio
@@ -366,15 +409,23 @@ const ServiceModal = ({ expandedService, setExpandedService, editService, isAuth
                 <p><strong>Observaciones:</strong> {expandedService.observaciones}</p>
 
                 {isAuthenticated && (
-                    <button
-                        className="button edit-btn"
-                        onClick={() => {
-                            editService(expandedService);
-                            setExpandedService(null);
-                        }}
-                    >
-                        Editar
-                    </button>
+                    <>
+                        <button
+                            className="button edit-btn"
+                            onClick={() => {
+                                editService(expandedService);
+                                setExpandedService(null);
+                            }}
+                        >
+                            Editar
+                        </button>
+                        <button
+                            className="button delete-btn" // Asegúrate de definir estilos para 'delete-btn' en tu CSS
+                            onClick={() => deleteService(expandedService.id, dateKey)}
+                        >
+                            Eliminar
+                        </button>
+                    </>
                 )}
                 <button className="button close-btn" onClick={() => setExpandedService(null)}>
                     Cerrar
