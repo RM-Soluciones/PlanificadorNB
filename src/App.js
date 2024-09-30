@@ -9,59 +9,57 @@ import 'jspdf-autotable';
 
 // Listas de choferes y móviles
 const choferesList = [
-'MAXIMILIANO MENDOZA',
-'ROJAS  JORGE',
-'VELEZ JORGE',
-'MAMANI.P  FEDERICO',
-'CRUZ DARDO',
-'CALA ISMAEL GABRIEL',
-'SALVATIERRA DARIO RAUL',
-'GUZMAN EMANUEL',
-'CORONEL CARLOS',
-'SOLIS OMAR',
-'RIOS LEONARDO',
-'SANCHEZ ADRIAN',
-'FLORES DIEGO',
-'FRANCISCO MAMANI.F',
-'HOYOS SERRUDO ARMANDO',
-'PEGINI YAGO',
-'DEZUANI HERNAN',
-'AVENDAÑO NAHUEL',
-'ARJONA CRISTIAN',
-'RAVAZA CARLOS',
-'MARTINEZ SIMÓN',
-'ARRATIA ROJAS FRANCISCO',
-'DIAZ MARCOS GABRIEL ',
-'MORALES COPA CARLOS',
-'SALAS LUIS',
-'GALLARDO LUIS',
-'APARICIO LEONEL'
-
+    'MAXIMILIANO MENDOZA',
+    'ROJAS  JORGE',
+    'VELEZ JORGE',
+    'MAMANI.P  FEDERICO',
+    'CRUZ DARDO',
+    'CALA ISMAEL GABRIEL',
+    'SALVATIERRA DARIO RAUL',
+    'GUZMAN EMANUEL',
+    'CORONEL CARLOS',
+    'SOLIS OMAR',
+    'RIOS LEONARDO',
+    'SANCHEZ ADRIAN',
+    'FLORES DIEGO',
+    'FRANCISCO MAMANI.F',
+    'HOYOS SERRUDO ARMANDO',
+    'PEGINI YAGO',
+    'DEZUANI HERNAN',
+    'AVENDAÑO NAHUEL',
+    'ARJONA CRISTIAN',
+    'RAVAZA CARLOS',
+    'MARTINEZ SIMÓN',
+    'ARRATIA ROJAS FRANCISCO',
+    'DIAZ MARCOS GABRIEL ',
+    'MORALES COPA CARLOS',
+    'SALAS LUIS',
+    'GALLARDO LUIS',
+    'APARICIO LEONEL'
 ];
 
 const movilesList = [
-'M32',
-'M33',
-'M09',
-'M18',
-'M20',
-'M21',
-'M22',
-'M24',
-'M25',
-'M26',
-'M28',
-'M30',
-'M34',
-'M35',
-'M36',
-'M37',
-'M38',
-'M39',
-'M40',
-'M41',
-'M42'
-
+    'M32',
+    'M33',
+    'M09',
+    'M18',
+    'M20',
+    'M21',
+    'M22',
+    'M24',
+    'M25',
+    'M26',
+    'M28',
+    'M30',
+    'M34',
+    'M35',
+    'M36',
+    'M37',
+    'M38',
+    'M39',
+    'M40',
+    'M41',
+    'M42'
 ];
 
 // Crear opciones para react-select
@@ -193,20 +191,20 @@ const ServiceCard = ({ service, setExpandedService }) => {
 };
 
 const ServiceForm = ({
-                         editingService,
-                         formData,
-                         setFormData,
-                         addUnidad,
-                         handleInputChange,
-                         handleArrayInputChange,
-                         handleChoferInputChange,
-                         saveService,
-                         updateService,
-                         setShowForm,
-                         setEditingService,
-                         services,
-                         showForm
-                     }) => {
+    editingService,
+    formData,
+    setFormData,
+    addUnidad,
+    handleInputChange,
+    handleArrayInputChange,
+    handleChoferInputChange,
+    saveService,
+    updateService,
+    setShowForm,
+    setEditingService,
+    services,
+    showForm
+}) => {
     // Obtener la fecha actual del formulario
     const [year, month, day] = showForm.split('-');
 
@@ -341,6 +339,7 @@ const ServiceForm = ({
         </div>
     );
 };
+
 // Dentro del componente App
 
 const deleteService = async (serviceId, dateKey) => {
@@ -385,10 +384,13 @@ const deleteService = async (serviceId, dateKey) => {
 )}
 
 
-const ServiceModal = ({ expandedService, setExpandedService, editService, isAuthenticated }) => {
+const ServiceModal = ({ expandedService, setExpandedService, editService, isAuthenticated, deleteService }) => {
     // Obtener el color asociado al tipo de servicio
     const serviceOption = servicioOptions.find(option => option.value === expandedService.servicio);
     const serviceColor = serviceOption ? serviceOption.color : '#FFFFFF';
+
+    // Definir dateKey aquí
+    const dateKey = `${expandedService.year}-${expandedService.month}-${expandedService.day}`;
 
     return (
         <div className="modal-backdrop" onClick={() => setExpandedService(null)}>
@@ -625,9 +627,7 @@ function App() {
                         case 'UPDATE':
                             // Eliminar de todos los dateKeys posibles
                             Object.keys(updatedServices).forEach(key => {
-                                updatedServices[key] = updatedServices[key].filter(
-                                    (service) => service.id !== newServiceData.id
-                                );
+                                updatedServices[key] = updatedServices[key].filter(service => service.id !== newServiceData.id);
                                 if (updatedServices[key].length === 0) {
                                     delete updatedServices[key];
                                 }
@@ -640,9 +640,7 @@ function App() {
                             break;
                         case 'DELETE':
                             if (updatedServices[oldDateKey]) {
-                                updatedServices[oldDateKey] = updatedServices[oldDateKey].filter(
-                                    (service) => service.id !== oldServiceData.id
-                                );
+                                updatedServices[oldDateKey] = updatedServices[oldDateKey].filter(service => service.id !== oldServiceData.id);
                                 if (updatedServices[oldDateKey].length === 0) {
                                     delete updatedServices[oldDateKey];
                                 }
@@ -1173,6 +1171,7 @@ function App() {
                     setExpandedService={setExpandedService}
                     editService={editService}
                     isAuthenticated={isAuthenticated}
+                    deleteService={deleteService} // Pasar la función aquí
                 />
             )}
         </div>
