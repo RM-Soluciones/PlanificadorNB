@@ -14,6 +14,10 @@
     --light-grey-color: #CED4DA;    /* Gris claro */
 }
 
+body {
+    background-image: url('/public/WhatsApp\ Image\ 2024-10-02\ at\ 12.23.22_b0f7f781.jpg');
+  }  
+
 /* Reset básico */
 * {
     margin: 0;
@@ -218,7 +222,7 @@ body {
 .day-card {
     flex: 0 0 calc(100% / 7 - 10px);
     margin: 5px;
-    background-color: var(--white-color);
+    background-color: rgba(255, 255, 255, 0.3); /* Fondo blanco con opacidad del 80% */
     border-radius: 5px;
     padding: 10px;
     box-sizing: border-box;
