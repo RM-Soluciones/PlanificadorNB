@@ -7,10 +7,6 @@ import Select from 'react-select';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
-// Importamos date-fns y la localización en español
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
-
 // Listas de choferes y móviles
 const choferesList = [
     'MAXIMILIANO MENDOZA',
@@ -96,6 +92,13 @@ const formatDateForInput = (date) => {
     return localDate.toISOString().split('T')[0];
 };
 
+// Arrays de días de la semana y meses en español
+const daysOfWeek = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const monthsOfYear = [
+    'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+];
+
 // Componentes separados
 
 const DayCard = ({ dayData, dateKey, servicesForDay, addService, setExpandedService, filters, services, isAuthenticated }) => {
@@ -104,8 +107,9 @@ const DayCard = ({ dayData, dateKey, servicesForDay, addService, setExpandedServ
     // Crear un objeto Date
     const date = new Date(year, month - 1, day);
 
-    // Formatear la fecha
-    const formattedDate = format(date, "EEEE d/M", { locale: es }).toLowerCase();
+    // Obtener el día de la semana y formatear la fecha
+    const dayOfWeek = daysOfWeek[date.getDay()];
+    const formattedDate = `${dayOfWeek} ${day}/${month}`;
 
     // Filtrar los servicios según los filtros seleccionados
     const filteredServices = servicesForDay?.filter(service => {
@@ -237,6 +241,18 @@ const ServiceForm = ({
         }),
     };
 
+    // Función para eliminar una unidad
+    const removeUnidad = (index) => {
+        setFormData((prevData) => {
+            const updatedUnidades = [...prevData.unidades];
+            updatedUnidades.splice(index, 1);
+            return {
+                ...prevData,
+                unidades: updatedUnidades
+            };
+        });
+    };
+
     return (
         <div className="form-container">
             <h4>{editingService ? "Editar servicio" : "Añadir servicio"}</h4>
@@ -285,6 +301,8 @@ const ServiceForm = ({
                             />
                         </div>
                     ))}
+                    {/* Botón para eliminar unidad */}
+                    <button onClick={() => removeUnidad(index)} className="button delete-btn">Eliminar Unidad</button>
                 </div>
             ))}
 
@@ -891,7 +909,7 @@ function App() {
     };
 
     // Obtener el nombre del mes actual
-    const displayedMonthName = format(new Date(currentYear, viewedMonthIndex, 1), 'LLLL', { locale: es });
+    const displayedMonthName = monthsOfYear[viewedMonthIndex];
 
     const addService = (dateKey) => {
         setFormData(initialFormData);
@@ -1056,9 +1074,9 @@ function App() {
                         <div className="month-selector">
                             <label htmlFor="monthSelector">Ir al mes: </label>
                             <select id="monthSelector" onChange={jumpToMonth} value={viewedMonthIndex}>
-                                {[...Array(12)].map((_, i) => (
+                                {monthsOfYear.map((monthName, i) => (
                                     <option key={i} value={i}>
-                                        {format(new Date(currentYear, i, 1), 'LLLL', { locale: es })}
+                                        {monthName}
                                     </option>
                                 ))}
                             </select>
