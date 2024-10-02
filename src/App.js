@@ -9,57 +9,74 @@ import 'jspdf-autotable';
 
 // Listas de choferes y móviles
 const choferesList = [
-    'MAXIMILIANO MENDOZA',
-    'ROJAS  JORGE',
-    'VELEZ JORGE',
-    'MAMANI.P  FEDERICO',
-    'CRUZ DARDO',
-    'CALA ISMAEL GABRIEL',
-    'SALVATIERRA DARIO RAUL',
-    'GUZMAN EMANUEL',
-    'CORONEL CARLOS',
-    'SOLIS OMAR',
-    'RIOS LEONARDO',
-    'SANCHEZ ADRIAN',
-    'FLORES DIEGO',
-    'FRANCISCO MAMANI.F',
-    'HOYOS SERRUDO ARMANDO',
-    'PEGINI YAGO',
-    'DEZUANI HERNAN',
-    'AVENDAÑO NAHUEL',
-    'ARJONA CRISTIAN',
-    'RAVAZA CARLOS',
-    'MARTINEZ SIMÓN',
-    'ARRATIA ROJAS FRANCISCO',
-    'DIAZ MARCOS GABRIEL ',
-    'MORALES COPA CARLOS',
-    'SALAS LUIS',
-    'GALLARDO LUIS',
-    'APARICIO LEONEL'
+   "SARAPURA",
+   "MENDOZA",
+   "ROJAS",
+   "VELEZ",
+   "MAMANI.P",  
+   "CRUZ ",
+   "CALA ",
+   "SALVATIERRA", 
+   "GUZMAN ",
+   "CORONEL ",
+   "SOLIS ",
+   "RIOS ",
+   "SANCHEZ", 
+   "FLORES ",
+   "MAMANI.F",
+   "SERRUDO ",
+   "YAGO",
+   "DE ZUANI", 
+   "AVENDAÑO ",
+   "ARJONA ",
+   "RAVAZA ",
+   "MARTINEZ ",
+   "ARRATIA ",
+   "DIAZ ",
+   "COPA ",
+   "SALAS ",
+   "GALLARDO", 
+   "APARICIO", 
+   "GVH",
+   "MASTERBUS",
+   "FENIX",
+   "MAGNO",
+   "MAR ANDINO",
+   "MARCELO COPA",
+   "OTRO"
+   
 ];
 
 const movilesList = [
-    'M32',
-    'M33',
-    'M09',
-    'M18',
-    'M20',
-    'M21',
-    'M22',
-    'M24',
-    'M25',
-    'M26',
-    'M28',
-    'M30',
-    'M34',
-    'M35',
-    'M36',
-    'M37',
-    'M38',
-    'M39',
-    'M40',
-    'M41',
-    'M42'
+    "M32",
+    "M33",
+    "M09",
+    "M18",
+    "M20",
+    "M21",
+    "M22",
+    "M24",
+    "M25",
+    "M26",
+    "M28",
+    "M30",
+    "M34",
+    "M35",
+    "M36",
+    "M37",
+    "M38",
+    "M39",
+    "M40",
+    "M41",
+    "M42",
+    "GVH",
+    "MASTERBUS",
+    "FENIX",
+    "MAGNO",
+    "MAR ANDINO",
+    "MARCELO COPA",
+    "OTRO"
+    
 ];
 
 // Crear opciones para react-select
@@ -340,50 +357,6 @@ const ServiceForm = ({
     );
 };
 
-// Dentro del componente App
-
-const deleteService = async (serviceId, dateKey) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar este servicio?')) {
-        return;
-    }
-
-    const { error } = await supabase
-        .from('services')
-        .delete()
-        .eq('id', serviceId);
-
-    if (error) {
-        console.error('Error al eliminar el servicio:', error);
-        alert(`Error al eliminar el servicio: ${error.message}`);
-    } else {
-        alert('Servicio eliminado exitosamente.');
-        // Actualizar el estado local
-        setServices(prevServices => {
-            const updatedServices = { ...prevServices };
-            if (updatedServices[dateKey]) {
-                updatedServices[dateKey] = updatedServices[dateKey].filter(service => service.id !== serviceId);
-                if (updatedServices[dateKey].length === 0) {
-                    delete updatedServices[dateKey];
-                }
-            }
-            return updatedServices;
-        });
-        setExpandedService(null); // Cerrar el modal después de eliminar
-    }
-};
-
-{/* Dentro del componente App, en el renderizado */}
-{expandedService && (
-    <ServiceModal
-        expandedService={expandedService}
-        setExpandedService={setExpandedService}
-        editService={editService}
-        isAuthenticated={isAuthenticated}
-        deleteService={deleteService} // Pasar la función aquí
-    />
-)}
-
-
 const ServiceModal = ({ expandedService, setExpandedService, editService, isAuthenticated, deleteService }) => {
     // Obtener el color asociado al tipo de servicio
     const serviceOption = servicioOptions.find(option => option.value === expandedService.servicio);
@@ -422,7 +395,7 @@ const ServiceModal = ({ expandedService, setExpandedService, editService, isAuth
                             Editar
                         </button>
                         <button
-                            className="button delete-btn" // Asegúrate de definir estilos para 'delete-btn' en tu CSS
+                            className="button delete-btn"
                             onClick={() => deleteService(expandedService.id, dateKey)}
                         >
                             Eliminar
@@ -675,6 +648,85 @@ function App() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [daysInYear, currentMonth, currentDay, showForm, editingService, expandedService]);
 
+    // Estados para el arrastre
+    const [isDragging, setIsDragging] = useState(false);
+    const [startXDrag, setStartXDrag] = useState(0);
+    const [scrollLeftDrag, setScrollLeftDrag] = useState(0);
+
+    useEffect(() => {
+        const scrollContainer = scrollContainerRef.current;
+        if (!scrollContainer) return;
+
+        let isDown = false;
+        let startX;
+        let scrollLeftPos;
+
+        const mouseDownHandler = (e) => {
+            isDown = true;
+            scrollContainer.classList.add('active');
+            startX = e.pageX - scrollContainer.offsetLeft;
+            scrollLeftPos = scrollContainer.scrollLeft;
+        };
+
+        const mouseLeaveHandler = () => {
+            isDown = false;
+            scrollContainer.classList.remove('active');
+        };
+
+        const mouseUpHandler = () => {
+            isDown = false;
+            scrollContainer.classList.remove('active');
+        };
+
+        const mouseMoveHandler = (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - scrollContainer.offsetLeft;
+            const walk = (x - startX) * 1; // Ajusta el multiplicador según la velocidad que desees
+            scrollContainer.scrollLeft = scrollLeftPos - walk;
+        };
+
+        // Manejadores para dispositivos táctiles
+        const touchStartHandler = (e) => {
+            isDown = true;
+            scrollContainer.classList.add('active');
+            startX = e.touches[0].pageX - scrollContainer.offsetLeft;
+            scrollLeftPos = scrollContainer.scrollLeft;
+        };
+
+        const touchEndHandler = () => {
+            isDown = false;
+            scrollContainer.classList.remove('active');
+        };
+
+        const touchMoveHandler = (e) => {
+            if (!isDown) return;
+            const x = e.touches[0].pageX - scrollContainer.offsetLeft;
+            const walk = (x - startX) * 1; // Ajusta el multiplicador según la velocidad que desees
+            scrollContainer.scrollLeft = scrollLeftPos - walk;
+        };
+
+        scrollContainer.addEventListener('mousedown', mouseDownHandler);
+        scrollContainer.addEventListener('mouseleave', mouseLeaveHandler);
+        scrollContainer.addEventListener('mouseup', mouseUpHandler);
+        scrollContainer.addEventListener('mousemove', mouseMoveHandler);
+
+        scrollContainer.addEventListener('touchstart', touchStartHandler);
+        scrollContainer.addEventListener('touchend', touchEndHandler);
+        scrollContainer.addEventListener('touchmove', touchMoveHandler);
+
+        return () => {
+            scrollContainer.removeEventListener('mousedown', mouseDownHandler);
+            scrollContainer.removeEventListener('mouseleave', mouseLeaveHandler);
+            scrollContainer.removeEventListener('mouseup', mouseUpHandler);
+            scrollContainer.removeEventListener('mousemove', mouseMoveHandler);
+
+            scrollContainer.removeEventListener('touchstart', touchStartHandler);
+            scrollContainer.removeEventListener('touchend', touchEndHandler);
+            scrollContainer.removeEventListener('touchmove', touchMoveHandler);
+        };
+    }, []);
+
     const saveServiceToDatabase = async (serviceData) => {
         const dataToSave = {
             ...serviceData,
@@ -726,6 +778,36 @@ function App() {
 
                 return updatedServices;
             });
+        }
+    };
+
+    const deleteService = async (serviceId, dateKey) => {
+        if (!window.confirm('¿Estás seguro de que deseas eliminar este servicio?')) {
+            return;
+        }
+
+        const { error } = await supabase
+            .from('services')
+            .delete()
+            .eq('id', serviceId);
+
+        if (error) {
+            console.error('Error al eliminar el servicio:', error);
+            alert(`Error al eliminar el servicio: ${error.message}`);
+        } else {
+            alert('Servicio eliminado exitosamente.');
+            // Actualizar el estado local
+            setServices(prevServices => {
+                const updatedServices = { ...prevServices };
+                if (updatedServices[dateKey]) {
+                    updatedServices[dateKey] = updatedServices[dateKey].filter(service => service.id !== serviceId);
+                    if (updatedServices[dateKey].length === 0) {
+                        delete updatedServices[dateKey];
+                    }
+                }
+                return updatedServices;
+            });
+            setExpandedService(null); // Cerrar el modal después de eliminar
         }
     };
 
@@ -843,7 +925,7 @@ function App() {
     };
 
     // Funciones para los botones de navegación
-    const scrollLeft = () => {
+    const scrollLeftFunc = () => {
         const scrollContainer = scrollContainerRef.current;
         if (scrollContainer) {
             const dayCardWidth = scrollContainer.clientWidth / getDaysPerView();
@@ -854,7 +936,7 @@ function App() {
         }
     };
 
-    const scrollRight = () => {
+    const scrollRightFunc = () => {
         const scrollContainer = scrollContainerRef.current;
         if (scrollContainer) {
             const dayCardWidth = scrollContainer.clientWidth / getDaysPerView();
@@ -927,7 +1009,7 @@ function App() {
         filteredServices.forEach(service => {
             const serviceDate = `${service.day}/${service.month}/${service.year}`;
             const unidades = service.unidades.map(unidad => {
-                const movil = `<span style="font-weight:bold; color:#1E90FF;">Móvil: ${unidad.movil}</span>`;
+                const movil = `Móvil: ${unidad.movil}`;
                 const choferes = unidad.choferes.filter(Boolean).map(chofer => `Chofer: ${chofer}`).join(", ");
                 return `${movil}, ${choferes}`;
             }).join(" | ");
@@ -952,11 +1034,6 @@ function App() {
             styles: { fontSize: 10 },
             columnStyles: {
                 3: { cellWidth: 'auto' } // "Unidades" column
-            },
-            didParseCell: function (data) {
-                if (data.column.index === 3) { // "Unidades" column
-                    data.cell.styles.fontStyle = 'bold';
-                }
             }
         });
         doc.save(`informe_${reportStartDate.toLocaleDateString()}_al_${reportEndDate.toLocaleDateString()}.pdf`);
@@ -1116,7 +1193,7 @@ function App() {
 
                     {/* Botones de navegación en los extremos */}
                     <div className="slider-container">
-                        <button className="nav-button left-button" onClick={scrollLeft}>
+                        <button className="nav-button left-button" onClick={scrollLeftFunc}>
                             Anterior
                         </button>
 
@@ -1140,7 +1217,7 @@ function App() {
                             })}
                         </div>
 
-                        <button className="nav-button right-button" onClick={scrollRight}>
+                        <button className="nav-button right-button" onClick={scrollRightFunc}>
                             Siguiente
                         </button>
                     </div>
@@ -1171,7 +1248,7 @@ function App() {
                     setExpandedService={setExpandedService}
                     editService={editService}
                     isAuthenticated={isAuthenticated}
-                    deleteService={deleteService} // Pasar la función aquí
+                    deleteService={deleteService}
                 />
             )}
         </div>

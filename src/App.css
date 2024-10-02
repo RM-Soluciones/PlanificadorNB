@@ -79,19 +79,22 @@ body {
 }
 
 /* Selector de mes */
-.month-selector {
+.month-selector,
+.filter {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
 }
 
-.month-selector label {
+.month-selector label,
+.filter label {
     margin-bottom: 5px;
     font-weight: bold;
     color: var(--text-color);
 }
 
-.month-selector select {
+.month-selector select,
+.filter select {
     padding: 8px;
     font-size: 1rem;
     border: 1px solid var(--light-grey-color);
@@ -102,25 +105,16 @@ body {
     color: var(--text-color);
 }
 
-/* Filtros */
-.filters {
-    display: flex;
-    gap: 20px;
-}
-
-.filter {
-    display: flex;
-    flex-direction: column;
-}
-
-.filter label {
-    margin-bottom: 5px;
-    font-weight: bold;
-    color: var(--text-color);
-}
-
 /* Botones */
-.button {
+.button,
+.add-service-btn,
+.cancel-btn,
+.close-btn,
+.add-more-btn,
+.edit-btn,
+.report-btn,
+.login-submit-btn,
+.delete-btn {
     background-color: var(--primary-color);
     color: var(--white-color);
     border: none;
@@ -130,9 +124,18 @@ body {
     border-radius: 4px;
     font-size: 1rem;
     transition: background-color 0.3s ease;
+    width: 100%;
 }
 
-.button:hover {
+.button:hover,
+.add-service-btn:hover,
+.cancel-btn:hover,
+.close-btn:hover,
+.add-more-btn:hover,
+.edit-btn:hover,
+.report-btn:hover,
+.login-submit-btn:hover,
+.delete-btn:hover {
     background-color: var(--secondary-color);
 }
 
@@ -141,10 +144,9 @@ body {
     cursor: not-allowed;
 }
 
+/* Botones específicos */
 .add-service-btn {
     background-color: var(--success-color);
-    margin-top: 10px;
-    width: 100%;
 }
 
 .add-service-btn:hover {
@@ -153,36 +155,15 @@ body {
 
 .cancel-btn {
     background-color: var(--danger-color);
-    width: 100%;
 }
 
-.close-btn {
-    background-color: var(--secondary-color);
-    width: 100%;
-}
-
-.add-more-btn {
-    background-color: var(--accent-color);
-    margin-top: 10px;
-    width: 100%;
-}
-
-.add-more-btn:hover {
-    background-color: #d48806;
-}
-
+.close-btn,
 .edit-btn {
     background-color: var(--accent-color);
-    margin-bottom: 10px;
-}
-
-.edit-btn:hover {
-    background-color: #d48806;
 }
 
 .report-btn {
     background-color: var(--accent-color);
-    color: var(--white-color);
 }
 
 .report-btn:hover {
@@ -190,14 +171,15 @@ body {
 }
 
 .login-submit-btn {
-    background-color: var(--primary-color);
-    color: var(--white-color);
-    width: 100%;
     margin-top: 10px;
 }
 
-.login-submit-btn:hover {
-    background-color: var(--secondary-color);
+.delete-btn {
+    background-color: var(--danger-color);
+}
+
+.delete-btn:hover {
+    background-color: #c0392b;
 }
 
 /* Contenedor de desplazamiento horizontal */
@@ -213,6 +195,10 @@ body {
     scroll-behavior: smooth;
     padding-bottom: 10px;
     margin: 20px 0;
+    overflow-y: hidden;
+    white-space: nowrap;
+    cursor: grab;
+    user-select: none;
 }
 
 .days-scroll-container::-webkit-scrollbar {
@@ -224,9 +210,13 @@ body {
     border-radius: 4px;
 }
 
+.days-scroll-container.active {
+    cursor: grabbing;
+}
+
 /* Tarjetas de día */
 .day-card {
-    flex: 0 0 calc(100% / 7 - 10px); /* Cambiado de 8 a 7 tarjetas por fila */
+    flex: 0 0 calc(100% / 7 - 10px);
     margin: 5px;
     background-color: var(--white-color);
     border-radius: 5px;
@@ -271,16 +261,15 @@ body {
 }
 
 /* Resaltar móvil */
-.movil-highlight {
+.movil-highlight,
+.movil-highlight-modal {
     font-weight: bold;
     font-size: 1.1rem;
-    color:  #1E2A38; /* Azul brillante */
+    color: var(--primary-color);
 }
 
 .movil-highlight-modal {
-    font-weight: bold;
     font-size: 1.2rem;
-    color:  #1E2A38; /* Azul brillante */
 }
 
 /* Botones de navegación */
@@ -357,12 +346,6 @@ body {
 
 .unidad-box label {
     margin-top: 10px;
-    color: var(--text-color);
-}
-
-.unidad-box input {
-    width: 100%;
-    margin-bottom: 10px;
 }
 
 /* Estilos para react-select */
@@ -528,18 +511,6 @@ body {
     color: var(--text-color);
 }
 
-/* Modal de inicio de sesión */
-.login-submit-btn {
-    background-color: var(--primary-color);
-    color: var(--white-color);
-    width: 100%;
-    margin-top: 10px;
-}
-
-.login-submit-btn:hover {
-    background-color: var(--secondary-color);
-}
-
 /* Responsividad */
 
 /* Pantallas grandes: mostrar 7 días */
@@ -606,20 +577,3 @@ body {
         font-size: 1.5rem;
     }
 }
-/* App.css */
-
-/* Botón Eliminar */
-.delete-btn {
-    background-color: #E74C3C; /* Rojo */
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    margin: 5px;
-    cursor: pointer;
-    border-radius: 4px;
-}
-
-.delete-btn:hover {
-    background-color: #c0392b;
-}
-
