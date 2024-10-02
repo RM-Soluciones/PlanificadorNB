@@ -7,76 +7,63 @@ import Select from 'react-select';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
+// Importamos date-fns y la localización en español
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+
 // Listas de choferes y móviles
 const choferesList = [
-   "SARAPURA",
-   "MENDOZA",
-   "ROJAS",
-   "VELEZ",
-   "MAMANI.P",  
-   "CRUZ ",
-   "CALA ",
-   "SALVATIERRA", 
-   "GUZMAN ",
-   "CORONEL ",
-   "SOLIS ",
-   "RIOS ",
-   "SANCHEZ", 
-   "FLORES ",
-   "MAMANI.F",
-   "SERRUDO ",
-   "YAGO",
-   "DE ZUANI", 
-   "AVENDAÑO ",
-   "ARJONA ",
-   "RAVAZA ",
-   "MARTINEZ ",
-   "ARRATIA ",
-   "DIAZ ",
-   "COPA ",
-   "SALAS ",
-   "GALLARDO", 
-   "APARICIO", 
-   "GVH",
-   "MASTERBUS",
-   "FENIX",
-   "MAGNO",
-   "MAR ANDINO",
-   "MARCELO COPA",
-   "OTRO"
-   
+    'MAXIMILIANO MENDOZA',
+    'ROJAS  JORGE',
+    'VELEZ JORGE',
+    'MAMANI.P  FEDERICO',
+    'CRUZ DARDO',
+    'CALA ISMAEL GABRIEL',
+    'SALVATIERRA DARIO RAUL',
+    'GUZMAN EMANUEL',
+    'CORONEL CARLOS',
+    'SOLIS OMAR',
+    'RIOS LEONARDO',
+    'SANCHEZ ADRIAN',
+    'FLORES DIEGO',
+    'FRANCISCO MAMANI.F',
+    'HOYOS SERRUDO ARMANDO',
+    'PEGINI YAGO',
+    'DEZUANI HERNAN',
+    'AVENDAÑO NAHUEL',
+    'ARJONA CRISTIAN',
+    'RAVAZA CARLOS',
+    'MARTINEZ SIMÓN',
+    'ARRATIA ROJAS FRANCISCO',
+    'DIAZ MARCOS GABRIEL ',
+    'MORALES COPA CARLOS',
+    'SALAS LUIS',
+    'GALLARDO LUIS',
+    'APARICIO LEONEL'
 ];
 
 const movilesList = [
-    "M32",
-    "M33",
-    "M09",
-    "M18",
-    "M20",
-    "M21",
-    "M22",
-    "M24",
-    "M25",
-    "M26",
-    "M28",
-    "M30",
-    "M34",
-    "M35",
-    "M36",
-    "M37",
-    "M38",
-    "M39",
-    "M40",
-    "M41",
-    "M42",
-    "GVH",
-    "MASTERBUS",
-    "FENIX",
-    "MAGNO",
-    "MAR ANDINO",
-    "MARCELO COPA",
-    "OTRO"
-    
+    'M32',
+    'M33',
+    'M09',
+    'M18',
+    'M20',
+    'M21',
+    'M22',
+    'M24',
+    'M25',
+    'M26',
+    'M28',
+    'M30',
+    'M34',
+    'M35',
+    'M36',
+    'M37',
+    'M38',
+    'M39',
+    'M40',
+    'M41',
+    'M42'
 ];
 
 // Crear opciones para react-select
@@ -90,23 +77,6 @@ const servicioOptions = [
     { value: 'BAJADA', label: 'BAJADA', color: '#EB5757' },     // ROJO
     { value: 'STAND BY', label: 'STAND BY', color: '#F2C94C' }  // AMARILLO
 ];
-
-// Funciones auxiliares
-const getDaysInMonth = (month, year) => {
-    return new Date(year, month, 0).getDate();
-};
-
-const getDayOfWeek = (day, month, year) => {
-    const date = new Date(year, month - 1, day);
-    const options = { weekday: 'long' };
-    return new Intl.DateTimeFormat('es-ES', options).format(date);
-};
-
-const getMonthName = (month) => {
-    const date = new Date(0, month - 1);
-    const options = { month: 'long' };
-    return new Intl.DateTimeFormat('es-ES', options).format(date);
-};
 
 // Datos iniciales para el formulario
 const initialFormData = {
@@ -129,7 +99,13 @@ const formatDateForInput = (date) => {
 // Componentes separados
 
 const DayCard = ({ dayData, dateKey, servicesForDay, addService, setExpandedService, filters, services, isAuthenticated }) => {
-    const { day, dayOfWeek, month, year } = dayData;
+    const { day, month, year } = dayData;
+
+    // Crear un objeto Date
+    const date = new Date(year, month - 1, day);
+
+    // Formatear la fecha
+    const formattedDate = format(date, "EEEE d/M", { locale: es }).toLowerCase();
 
     // Filtrar los servicios según los filtros seleccionados
     const filteredServices = servicesForDay?.filter(service => {
@@ -143,7 +119,7 @@ const DayCard = ({ dayData, dateKey, servicesForDay, addService, setExpandedServ
     return (
         <div className="day-card">
             <div className="day-card-content">
-                <h3>{`${dayOfWeek} ${day}`}</h3>
+                <h3>{formattedDate}</h3>
 
                 {isAuthenticated && (
                     <button className="add-service-btn" onClick={() => addService(dateKey)}>
@@ -542,9 +518,9 @@ function App() {
     const daysInYear = useMemo(() => {
         let days = [];
         for (let month = 1; month <= 12; month++) {
-            const daysInMonth = getDaysInMonth(month, currentYear);
+            const daysInMonth = new Date(currentYear, month, 0).getDate();
             for (let day = 1; day <= daysInMonth; day++) {
-                days.push({ day, dayOfWeek: getDayOfWeek(day, month, currentYear), month, year: currentYear });
+                days.push({ day, month, year: currentYear });
             }
         }
         return days;
@@ -909,14 +885,13 @@ function App() {
 
     const getDaysPerView = () => {
         const width = window.innerWidth;
-        if (width <= 480) return 1;
-        if (width <= 768) return 2;
-        if (width <= 1200) return 5;
-        if (width >= 1600) return 7; // Cambiado de 8 a 7
-        return 7;
+        if (width >= 1200) return 7; // Pantallas grandes
+        if (width >= 768) return 5;  // Pantallas medianas
+        return 2;                    // Pantallas pequeñas
     };
 
-    const displayedMonthName = getMonthName(viewedMonthIndex + 1);
+    // Obtener el nombre del mes actual
+    const displayedMonthName = format(new Date(currentYear, viewedMonthIndex, 1), 'LLLL', { locale: es });
 
     const addService = (dateKey) => {
         setFormData(initialFormData);
@@ -1083,7 +1058,7 @@ function App() {
                             <select id="monthSelector" onChange={jumpToMonth} value={viewedMonthIndex}>
                                 {[...Array(12)].map((_, i) => (
                                     <option key={i} value={i}>
-                                        {getMonthName(i + 1)}
+                                        {format(new Date(currentYear, i, 1), 'LLLL', { locale: es })}
                                     </option>
                                 ))}
                             </select>
