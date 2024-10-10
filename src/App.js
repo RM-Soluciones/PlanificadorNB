@@ -75,7 +75,8 @@ const movilesList = [
     "MAGNO",
     "MAR ANDINO",
     "MARCELO COPA",
-    "OTRO"
+    "OTRO",
+    "M43"
     ];
 
 // Crear opciones para react-select
