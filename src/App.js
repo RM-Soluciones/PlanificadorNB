@@ -69,14 +69,14 @@ const movilesList = [
     "M40",
     "M41",
     "M42",
+    "M46",
     "GVH",
     "MASTERBUS",
     "FENIX",
     "MAGNO",
     "MAR ANDINO",
     "MARCELO COPA",
-    "OTRO",
-    "M46"
+    "OTRO"
     ];
 
 // Crear opciones para react-select
