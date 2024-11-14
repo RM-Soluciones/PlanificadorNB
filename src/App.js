@@ -43,7 +43,9 @@ const choferesList = [
     "MAGNO",
     "MAR ANDINO",
     "MARCELO COPA",
-    "OTRO"
+    "OTRO",
+    "VILAPLANA",
+    "FLORES"
     
 ];
 
