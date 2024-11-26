@@ -7,7 +7,7 @@ import Select from 'react-select';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
-// Listas de choferes y móviles
+// Listas de choferes y móvil
 const choferesList = [
     "SARAPURA", "MENDOZA", "ROJAS", "VELEZ", "MAMANI.P",
     "CRUZ", "CALA", "SALVATIERRA", "GUZMAN", "CORONEL",
