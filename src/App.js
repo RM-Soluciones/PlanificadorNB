@@ -496,12 +496,15 @@ function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [showLoginForm, setShowLoginForm] = useState(false);
 
-    const daysInYear = useMemo(() => {
+        const daysInYear = useMemo(() => {
+        const rangeYears = 2; // Número de años a cubrir (año actual y próximo año)
         let days = [];
-        for (let month = 1; month <= 12; month++) {
-            const daysInMonth = new Date(currentYear, month, 0).getDate();
-            for (let day = 1; day <= daysInMonth; day++) {
-                days.push({ day, month, year: currentYear });
+        for (let year = currentYear; year < currentYear + rangeYears; year++) {
+            for (let month = 1; month <= 12; month++) {
+                const daysInMonth = new Date(year, month, 0).getDate();
+                for (let day = 1; day <= daysInMonth; day++) {
+                    days.push({ day, month, year });
+                }
             }
         }
         return days;
