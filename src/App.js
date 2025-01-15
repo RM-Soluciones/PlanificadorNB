@@ -14,7 +14,7 @@ const choferesList = [
     "SERRUDO", "YAGO", "DE ZUANI", "AVENDAÑO", "ARJONA",
     "RAVAZA", "MARTINEZ", "ARRATIA", "DIAZ", "SALAS", "GALLARDO", "APARICIO", "GVH", "MASTERBUS",
     "FENIX", "MAGNO", "MAR ANDINO", "MARCELO COPA",
-    "OTRO", "VILAPLANA", "FLORES.J", "SOLIZ.A", "ALVAREZ"
+    "OTRO", "VILAPLANA", "FLORES.J", "SOLIZ.A", "ALVAREZ", "RENFIJES"
 ];
 
 const movilesList = [
