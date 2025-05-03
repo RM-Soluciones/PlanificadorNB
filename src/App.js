@@ -8,13 +8,13 @@ import 'jspdf-autotable';
 
 // Listas de choferes y móvil
 const choferesList = [
-    "SARAPURA", "MENDOZA", "ROJAS", "VELEZ", "MAMANI.P",
-    "CRUZ", "CALA", "SALVATIERRA", "GUZMAN", "CORONEL",
+    "SARAPURA", "MENDOZA", "MAMANI.P",
+    "CRUZ D", "CALA", "SALVATIERRA", "GUZMAN", "CORONEL",
     "SOLIS", "RIOS", "SANCHEZ", "FLORES", "MAMANI.F",
-    "SERRUDO", "YAGO", "DE ZUANI", "AVENDAÑO", "ARJONA",
-    "RAVAZA", "MARTINEZ", "ARRATIA", "DIAZ", "SALAS", "GALLARDO", "APARICIO", "GVH", "MASTERBUS",
+    "SERRUDO", "DE ZUANI", "AVENDAÑO", "ARJONA",
+    "RAVAZA", "ARRATIA", "DIAZ", "SALAS", "GALLARDO", "APARICIO", "GVH", "MASTERBUS",
     "FENIX", "MAGNO", "MAR ANDINO", "MARCELO COPA",
-    "OTRO", "VILAPLANA", "FLORES.J", "SOLIZ.A", "ALVAREZ", "RENFIJES"
+    "OTRO", "VILAPLANA", "FLORES.J", "SOLIZ.A", "ALVAREZ", "RENFIJES", "ORTUÑO", "GERON", "SANTOS", "CRUZ F"
 ];
 
 const movilesList = [
@@ -22,7 +22,7 @@ const movilesList = [
     "M24", "M25", "M26", "M28", "M30", "M34", "M35",
     "M36", "M37", "M38", "M39", "M40", "M41", "M42",
     "M46", "GVH", "MASTERBUS", "FENIX", "MAGNO",
-    "MAR ANDINO", "MARCELO COPA", "OTRO", "M43", "M44", "M45"
+    "MAR ANDINO", "MARCELO COPA", "OTRO", "M43", "M44", "M45", "CAMIONETA RTM"
 ];
 
 // Crear opciones para react-select
