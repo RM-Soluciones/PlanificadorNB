@@ -608,10 +608,6 @@ function App() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [daysInYear, currentMonth, currentDay, showForm, editingService, expandedService]);
 
-    // Estados para el arrastre
-    const [isDragging, setIsDragging] = useState(false);
-    const [startXDrag, setStartXDrag] = useState(0);
-    const [scrollLeftDrag, setScrollLeftDrag] = useState(0);
 
     useEffect(() => {
         const scrollContainer = scrollContainerRef.current;
@@ -706,12 +702,12 @@ function App() {
 
     const updateServiceInDatabase = async (serviceData) => {
         const { id, ...rest } = serviceData;
-
+// eslint-disable-next-line
         const { data, error } = await supabase
             .from('services')
             .update(rest)
             .eq('id', id);
-
+            // eslint-disable-next-line
         if (error) {
             console.error('Error al actualizar el servicio:', error);
             alert(`Error al actualizar el servicio: ${error.message}`);

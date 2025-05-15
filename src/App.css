@@ -15,8 +15,12 @@
 }
 
 body {
-    background-image: url('/public/WhatsApp\ Image\ 2024-10-02\ at\ 12.23.22_b0f7f781.jpg');
-  }  
+  background-image: url('/public/nuevaimagen.jpeg');
+  background-size: cover;         /* Escala la imagen para cubrir todo el fondo */
+  background-repeat: no-repeat;   /* Evita que se repita */
+  background-position: center;    /* Centra la imagen */
+  background-attachment: fixed;   /* Opcional: mantiene la imagen fija al hacer scroll */
+}
 
 /* Reset básico */
 * {
