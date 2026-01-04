@@ -1,64 +1,179 @@
-# **Documentación del Proyecto: Planificación de Servicios**
+# **Planificador de Servicios - Empresa de Logística**
 
 ## **Índice**
 1. [Descripción del Proyecto](#descripcion-del-proyecto)
-2. [Tecnologías Utilizadas](#tecnologias-utilizadas)
-3. [Requisitos Previos](#requisitos-previos)
-4. [Instalación](#instalacion)
-5. [Variables de Entorno](#variables-de-entorno)
-6. [Uso](#uso)
-7. [Funcionalidades Principales](#funcionalidades-principales)
-8. [Despliegue en Vercel](#despliegue-en-vercel)
-9. [Contribuciones](#contribuciones)
+2. [Nuevas Funcionalidades](#nuevas-funcionalidades)
+3. [Tecnologías Utilizadas](#tecnologias-utilizadas)
+4. [Requisitos Previos](#requisitos-previos)
+5. [Instalación](#instalacion)
+6. [Configuración de Base de Datos](#configuracion-de-base-de-datos)
+7. [Uso](#uso)
+8. [Funcionalidades Principales](#funcionalidades-principales)
+9. [Despliegue en Vercel](#despliegue-en-vercel)
+10. [Contribuciones](#contribuciones)
 
 ---
 
 ## 1. **Descripción del Proyecto**
 
-Este proyecto es una **aplicación de planificación de servicios** diseñada para gestionar y visualizar servicios a lo largo del año. Los usuarios pueden crear, editar y ver servicios con detalles como cliente, móvil, chofer, origen, destino, horario y observaciones. La aplicación está desarrollada con **React** en el frontend y **Supabase** como base de datos, con integración en **Vercel** para el despliegue.
+Este proyecto es una **aplicación de planificación de servicios** diseñada para empresas de logística. Permite gestionar y visualizar servicios a lo largo del año con detalles como cliente, móvil, chofer, origen, destino, horario y observaciones. La aplicación está desarrollada con **React** en el frontend y **Supabase** como base de datos.
 
-## 2. **Tecnologías Utilizadas**
+### **Características Principales:**
+- 📅 Planificación visual de servicios por días
+- 🚐 Gestión dinámica de choferes y móviles
+- 🗑️ Administración de datos y limpieza de almacenamiento
+- 📊 Informes PDF personalizados
+- 🔄 Actualizaciones en tiempo real
+- 🎨 Interfaz responsive y amigable
 
-- **React**: Framework para la construcción de interfaces de usuario.
-- **Supabase**: Base de datos PostgreSQL con API REST y autenticación.
-- **Vercel**: Plataforma de despliegue para frontend.
-- **UUID**: Para generar identificadores únicos.
-- **Slick Carousel**: Carrusel utilizado para la navegación entre los días del año.
+---
 
-## 3. **Requisitos Previos**
+## 2. **Nuevas Funcionalidades** ⭐
 
-Antes de iniciar, asegúrate de tener lo siguiente instalado en tu entorno:
+### **Sistema de 3 Pestañas (Solo para usuarios autenticados):**
 
-- [Node.js](https://nodejs.org/) (v12 o superior)
-- [npm](https://www.npmjs.com/) o [yarn](https://yarnpkg.com/)
+#### 📅 **Pestaña 1: Planificador**
+- Vista de calendario con servicios
+- Agregar/editar/eliminar servicios
+- Filtros por chofer y móvil
+- Semáforo de disponibilidad de recursos
+- Generación de informes PDF
+
+#### 🚐 **Pestaña 2: Gestión de Recursos**
+- **Agregar** nuevos choferes y móviles
+- **Editar** nombres de recursos existentes
+- **Eliminar** recursos obsoletos
+- Gestión dinámica sin necesidad de modificar código
+- Actualización automática en el planificador
+
+#### 🗑️ **Pestaña 3: Administración de Datos**
+- **Estadísticas** de uso y almacenamiento
+- **Vista por meses** de servicios
+- **Filtros** por períodos específicos
+- **Selección múltiple** de servicios
+- **Eliminación masiva** para liberar espacio
+- Confirmaciones de seguridad
+
+---
+
+## 3. **Tecnologías Utilizadas**
+
+- **React 18**: Framework para interfaces de usuario
+- **Supabase**: Base de datos PostgreSQL con API REST
+- **React-Select**: Selectores mejorados con búsqueda
+- **jsPDF**: Generación de informes PDF
+- **date-fns**: Manipulación de fechas
+- **React Toastify**: Notificaciones elegantes
+- **CSS3**: Estilos responsive modernos
+
+---
+
+## 4. **Requisitos Previos**
+
+Antes de iniciar, asegúrate de tener:
+
+- [Node.js](https://nodejs.org/) (v14 o superior)
+- [npm](https://www.npmjs.com/) (viene con Node.js)
 - [Cuenta en Supabase](https://supabase.com/) con un proyecto configurado
+- PowerShell con permisos de ejecución (Windows)
 
-## 4. **Instalación**
+---
 
-Sigue los siguientes pasos para instalar y configurar el proyecto localmente:
+## 5. **Instalación**
 
-1. Clona este repositorio:
+### Paso 1: Clonar el Proyecto
 
-    ```bash
-    git clone https://github.com/usuario/repo-planificacion-servicios.git
-    cd repo-planificacion-servicios
-    ```
+```bash
+git clone https://github.com/usuario/repo-planificacion-servicios.git
+cd PlanificadorNB
+```
 
-2. Instala las dependencias necesarias:
+### Paso 2: Instalar Dependencias
 
-    ```bash
-    npm install
-    ```
+```bash
+npm install
+```
 
-3. Crea un archivo `.env.local` en la raíz del proyecto y agrega tus **variables de entorno** necesarias (ver sección [Variables de Entorno](#variables-de-entorno)).
+### Paso 3: Configurar Supabase
 
-4. Inicia el servidor de desarrollo:
+Actualiza las credenciales en `src/supabaseClient.js`:
 
-    ```bash
-    npm start
-    ```
+```javascript
+const supabaseUrl = 'TU_URL_DE_SUPABASE';
+const supabaseAnonKey = 'TU_CLAVE_ANONIMA';
+```
 
-El proyecto estará disponible en `http://localhost:3000`.
+---
+
+## 6. **Configuración de Base de Datos** 🔧
+
+⚠️ **MUY IMPORTANTE**: Debes ejecutar el script SQL antes de usar las nuevas funcionalidades.
+
+### Paso 1: Acceder a Supabase
+1. Ve a [https://supabase.com](https://supabase.com)
+2. Abre tu proyecto
+3. Ve al **SQL Editor**
+
+### Paso 2: Ejecutar el Script
+1. Abre el archivo `setup_database.sql` del proyecto
+2. Copia TODO el contenido
+3. Pégalo en el SQL Editor de Supabase
+4. Haz clic en **"Run"**
+
+### Paso 3: Verificar
+Ejecuta en el SQL Editor:
+
+```sql
+SELECT * FROM choferes;
+SELECT * FROM moviles;
+```
+
+Deberías ver las listas de choferes y móviles cargadas.
+
+📖 **Para más detalles, consulta:** [`INSTRUCCIONES_SETUP.md`](INSTRUCCIONES_SETUP.md)
+
+---
+
+## 7. **Uso**
+
+### Iniciar la Aplicación
+
+```bash
+npm start
+```
+
+La aplicación se abrirá en `http://localhost:3000`
+
+### Iniciar Sesión
+
+- Haz clic en **"Iniciar Sesión"**
+- Contraseña por defecto: **`admin123`**
+- Una vez autenticado, verás las 3 pestañas principales
+
+### Navegación
+
+#### 📅 Pestaña Planificador
+1. **Ver servicios**: Navega por los días del año
+2. **Agregar servicio**: Clic en "+ Servicio" en cualquier día
+3. **Editar servicio**: Clic en una tarjeta de servicio
+4. **Eliminar servicio**: En el modal, clic en "Eliminar"
+5. **Filtrar**: Usa los selectores de chofer/móvil
+6. **Generar PDF**: Completa fechas y filtros, clic en "Generar Informe"
+
+#### 🚐 Pestaña Gestión de Recursos
+1. **Agregar**: Clic en "+ Agregar Chofer/Móvil"
+2. **Editar**: Clic en ✏️ al lado del nombre
+3. **Eliminar**: Clic en 🗑️ (con confirmación)
+
+#### 🗑️ Pestaña Administración de Datos
+1. **Ver estadísticas**: Tarjetas superiores
+2. **Filtrar por mes**: Selector de mes
+3. **Seleccionar**: Checks individuales o "Seleccionar Todos"
+4. **Eliminar**: Botones de eliminación (con confirmación)
+
+---
+
+## 8. **Funcionalidades Principales**
 
 ## 5. **Variables de Entorno**
 

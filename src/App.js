@@ -5,29 +5,8 @@ import "./App.css";
 import Select from 'react-select';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-
-// Listas de choferes y móvil
-const choferesList = [
-    "SARAPURA", "MENDOZA", "MAMANI.P",
-    "CRUZ D", "CALA", "SALVATIERRA", "GUZMAN", "CORONEL",
-    "SOLIS", "RIOS", "SANCHEZ", "FLORES", "MAMANI.F",
-    "SERRUDO", "DE ZUANI", "AVENDAÑO", "ARJONA",
-    "RAVAZA", "ARRATIA", "DIAZ", "SALAS", "GALLARDO", "APARICIO", "GVH", "MASTERBUS",
-    "FENIX", "MAGNO", "MAR ANDINO", "MARCELO COPA",
-    "OTRO", "VILAPLANA", "FLORES.J", "SOLIZ.A", "ALVAREZ", "RENFIJES", "ORTUÑO", "GERON", "SANTOS", "CRUZ F"
-];
-
-const movilesList = [
-    "M32", "M33", "M09", "M18", "M20", "M21", "M22",
-    "M24", "M25", "M26", "M28", "M30", "M34", "M35",
-    "M36", "M37", "M38", "M39", "M40", "M41", "M42",
-    "M46", "GVH", "MASTERBUS", "FENIX", "MAGNO",
-    "MAR ANDINO", "MARCELO COPA", "OTRO", "M43", "M44", "M45", "CAMIONETA RTM"
-];
-
-// Crear opciones para react-select
-const choferesOptions = choferesList.map((chofer) => ({ value: chofer, label: chofer }));
-const movilesOptions = movilesList.map((movil) => ({ value: movil, label: movil }));
+import GestionRecursos from './GestionRecursos';
+import AdministracionDatos from './AdministracionDatos';
 
 // Opciones de servicio con colores
 const servicioOptions = [
@@ -41,7 +20,7 @@ const servicioOptions = [
 const initialFormData = {
     cliente: '',
     servicio: null,
-    unidades: [{ movil: '', choferes: ['', '', ''] }],
+    unidades: [{ movil: '', choferes: [] }],
     origen: '',
     destino: '',
     horario: '',
@@ -76,10 +55,16 @@ const DayCard = ({ dayData, dateKey, servicesForDay, addService, setExpandedServ
 
     // Filtrar los servicios según los filtros seleccionados
     const filteredServices = servicesForDay?.filter(service => {
-        // Filtrar por chofer
-        const matchesChofer = filters.chofer ? service.unidades.some(unidad => unidad.choferes.includes(filters.chofer)) : true;
-        // Filtrar por móvil
-        const matchesMovil = filters.movil ? service.unidades.some(unidad => unidad.movil === filters.movil) : true;
+        // Filtrar por choferes (si hay filtros aplicados)
+        const matchesChofer = filters.choferes.length > 0 
+            ? service.unidades.some(unidad => 
+                unidad.choferes.some(chofer => filters.choferes.includes(chofer))
+              )
+            : true;
+        // Filtrar por móviles (si hay filtros aplicados)
+        const matchesMovil = filters.moviles.length > 0 
+            ? service.unidades.some(unidad => filters.moviles.includes(unidad.movil))
+            : true;
         return matchesChofer && matchesMovil;
     });
 
@@ -155,6 +140,8 @@ const ServiceForm = ({
     formData,
     setFormData,
     addUnidad,
+    addChofer,
+    removeChofer,
     handleInputChange,
     handleArrayInputChange,
     handleChoferInputChange,
@@ -163,7 +150,9 @@ const ServiceForm = ({
     setShowForm,
     setEditingService,
     services,
-    showForm
+    showForm,
+    choferesOptions,
+    movilesOptions
 }) => {
     // Obtener la fecha actual del formulario
     const [year, month, day] = showForm.split('-');
@@ -249,21 +238,31 @@ const ServiceForm = ({
                         placeholder="Seleccione un móvil..."
                     />
                     {unidad.choferes.map((choferValue, choferIndex) => (
-                        <div key={choferIndex}>
-                            <label>{`Chofer ${choferIndex + 1}:`}</label>
-                            <Select
-                                options={choferesOptions.map((choferOption) => ({
-                                    value: choferOption.value,
-                                    label: choferOption.label,
-                                    isOccupied: getAvailability('chofer', choferOption.value),
-                                }))}
-                                styles={customStyles}
-                                onChange={(selectedOption) => handleChoferInputChange(selectedOption.value, index, choferIndex)}
-                                value={choferesOptions.find((c) => c.value === choferValue)}
-                                placeholder="Seleccione un chofer..."
-                            />
+                        <div key={choferIndex} style={{display: 'flex', gap: '10px', alignItems: 'flex-end'}}>
+                            <div style={{flex: 1}}>
+                                <label>{`Chofer ${choferIndex + 1}:`}</label>
+                                <Select
+                                    options={choferesOptions.map((choferOption) => ({
+                                        value: choferOption.value,
+                                        label: choferOption.label,
+                                        isOccupied: getAvailability('chofer', choferOption.value),
+                                    }))}
+                                    styles={customStyles}
+                                    onChange={(selectedOption) => handleChoferInputChange(selectedOption.value, index, choferIndex)}
+                                    value={choferesOptions.find((c) => c.value === choferValue)}
+                                    placeholder="Seleccione un chofer..."
+                                />
+                            </div>
+                            <button 
+                                onClick={() => removeChofer(index, choferIndex)} 
+                                className="button delete-btn"
+                                style={{marginBottom: '16px', width: 'auto', padding: '8px 12px'}}
+                            >
+                                ✕
+                            </button>
                         </div>
                     ))}
+                    <button onClick={() => addChofer(index)} className="button add-more-btn" style={{marginBottom: '10px'}}>+ Añadir chofer</button>
                     {/* Botón para eliminar unidad */}
                     <button onClick={() => removeUnidad(index)} className="button delete-btn">Eliminar Unidad</button>
                 </div>
@@ -445,6 +444,33 @@ const Semaforo = ({ selectedDate, choferesList, movilesList, services }) => {
     );
 };
 
+const NotificationModal = ({ notification, onClose }) => {
+    useEffect(() => {
+        if (notification) {
+            const timer = setTimeout(() => {
+                onClose();
+            }, 3000); // Auto-cerrar después de 3 segundos
+            return () => clearTimeout(timer);
+        }
+    }, [notification, onClose]);
+
+    if (!notification) return null;
+
+    return (
+        <div className="notification-backdrop" onClick={onClose}>
+            <div className={`notification-modal ${notification.type}`} onClick={(e) => e.stopPropagation()}>
+                <div className="notification-icon">
+                    {notification.type === 'success' ? '✓' : '✕'}
+                </div>
+                <div className="notification-content">
+                    <p>{notification.message}</p>
+                </div>
+                <button className="notification-close" onClick={onClose}>×</button>
+            </div>
+        </div>
+    );
+};
+
 const LoginForm = ({ handleLogin, setShowLoginForm }) => {
     const [password, setPassword] = useState('');
 
@@ -485,7 +511,7 @@ function App() {
     const [editingService, setEditingService] = useState(null);
     const [expandedService, setExpandedService] = useState(null);
     const [formData, setFormData] = useState(initialFormData);
-    const [filters, setFilters] = useState({ chofer: null, movil: null });
+    const [filters, setFilters] = useState({ choferes: [], moviles: [] });
     const [selectedSemaforoDate, setSelectedSemaforoDate] = useState(new Date());
 
     const [reportFilterType, setReportFilterType] = useState('cliente');
@@ -495,20 +521,55 @@ function App() {
 
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [showLoginForm, setShowLoginForm] = useState(false);
+    const [activeTab, setActiveTab] = useState('planificador'); // 'planificador', 'recursos', 'administracion'
+    const [showControls, setShowControls] = useState(true); // Toggle para mostrar/ocultar controles
+    const [notification, setNotification] = useState(null); // { message: '', type: 'success' | 'error' }
+    
+    // Listas dinámicas de choferes y móviles
+    const [choferesList, setChoferesList] = useState([]);
+    const [movilesList, setMovilesList] = useState([]);
+    const [monthsBack, setMonthsBack] = useState(0); // Cuántos meses hacia atrás hemos cargado
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    
+    // Crear opciones para react-select
+    const choferesOptions = choferesList.map((chofer) => ({ value: chofer, label: chofer }));
+    const movilesOptions = movilesList.map((movil) => ({ value: movil, label: movil }));
 
-        const daysInYear = useMemo(() => {
-        const rangeYears = 2; // Número de años a cubrir (año actual y próximo año)
-        let days = [];
-        for (let year = currentYear; year < currentYear + rangeYears; year++) {
-            for (let month = 1; month <= 12; month++) {
-                const daysInMonth = new Date(year, month, 0).getDate();
-                for (let day = 1; day <= daysInMonth; day++) {
-                    days.push({ day, month, year });
-                }
+    // Generar los días desde el mes actual hacia adelante (inicialmente)
+    const daysInYear = useMemo(() => {
+        const days = [];
+        
+        // Calcular el mes de inicio basado en cuántos meses hacia atrás hemos cargado
+        let startYear = currentYear;
+        let startMonth = currentMonth - monthsBack;
+        
+        // Ajustar año si el mes es negativo
+        while (startMonth < 1) {
+            startMonth += 12;
+            startYear -= 1;
+        }
+        
+        // Generar días desde el mes calculado hasta 2 años adelante del año actual
+        const endYear = currentYear + 2;
+        
+        let year = startYear;
+        let month = startMonth;
+        
+        while (year < endYear || (year === endYear && month <= 12)) {
+            const daysInMonth = new Date(year, month, 0).getDate();
+            for (let day = 1; day <= daysInMonth; day++) {
+                days.push({ day, month, year });
+            }
+            
+            month++;
+            if (month > 12) {
+                month = 1;
+                year++;
             }
         }
+        
         return days;
-    }, [currentYear]);
+    }, [currentYear, currentMonth, monthsBack]);
 
     const scrollContainerRef = useRef(null);
 
@@ -536,8 +597,36 @@ function App() {
         }
     };
 
+    // Función para cargar choferes y móviles desde Supabase
+    const fetchRecursos = async () => {
+        // Cargar choferes
+        const { data: choferesData, error: choferesError } = await supabase
+            .from('choferes')
+            .select('nombre')
+            .order('nombre', { ascending: true });
+        
+        if (choferesError) {
+            console.error('Error al cargar choferes:', choferesError);
+        } else {
+            setChoferesList(choferesData.map(c => c.nombre));
+        }
+
+        // Cargar móviles
+        const { data: movilesData, error: movilesError } = await supabase
+            .from('moviles')
+            .select('nombre')
+            .order('nombre', { ascending: true });
+        
+        if (movilesError) {
+            console.error('Error al cargar móviles:', movilesError);
+        } else {
+            setMovilesList(movilesData.map(m => m.nombre));
+        }
+    };
+
     useEffect(() => {
         fetchServices();
+        fetchRecursos(); // Cargar choferes y móviles al iniciar
 
         const subscription = supabase
             .channel('public:services')
@@ -555,7 +644,11 @@ function App() {
                             if (!updatedServices[newDateKey]) {
                                 updatedServices[newDateKey] = [];
                             }
-                            updatedServices[newDateKey].push(newServiceData);
+                            // Prevenir duplicados: verificar si el servicio ya existe
+                            const existingService = updatedServices[newDateKey].find(s => s.id === newServiceData.id);
+                            if (!existingService) {
+                                updatedServices[newDateKey].push(newServiceData);
+                            }
                             break;
                         case 'UPDATE':
                             // Eliminar de todos los dateKeys posibles
@@ -592,21 +685,79 @@ function App() {
         };
     }, []);
 
+    // Scroll inicial al día actual - ejecutar solo en la carga inicial
     useEffect(() => {
-        // Desplazar al día actual solo al cargar la aplicación
-        const scrollContainer = scrollContainerRef.current;
-        if (scrollContainer && !showForm && !editingService && !expandedService) {
-            const currentDayIndex = daysInYear.findIndex(day => day.month === currentMonth && day.day === currentDay);
-            if (currentDayIndex !== -1) {
-                const dayCardWidth = scrollContainer.scrollWidth / daysInYear.length;
-                scrollContainer.scrollTo({
-                    left: currentDayIndex * dayCardWidth,
-                    behavior: 'smooth',
-                });
+        if (monthsBack !== 0) return; // Solo ejecutar en carga inicial
+        
+        const timer = setTimeout(() => {
+            const scrollContainer = scrollContainerRef.current;
+            if (scrollContainer && daysInYear.length > 0) {
+                // Buscar el día actual
+                const currentDayIndex = daysInYear.findIndex(
+                    day => day.year === currentYear && day.month === currentMonth && day.day === currentDay
+                );
+                
+                if (currentDayIndex !== -1) {
+                    const dayCardWidth = scrollContainer.scrollWidth / daysInYear.length;
+                    const containerWidth = scrollContainer.clientWidth;
+                    
+                    // Calcular posición para centrar el día actual
+                    const scrollPosition = (currentDayIndex * dayCardWidth) - (containerWidth / 2) + (dayCardWidth / 2);
+                    
+                    scrollContainer.scrollTo({
+                        left: Math.max(0, scrollPosition),
+                        behavior: 'smooth',
+                    });
+                }
             }
-        }
+        }, 300);
+        
+        return () => clearTimeout(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [daysInYear, currentMonth, currentDay, showForm, editingService, expandedService]);
+    }, [monthsBack]); // Solo ejecutar cuando monthsBack cambie (inicialmente es 0)
+
+    // Detector de scroll para carga diferida hacia atrás
+    useEffect(() => {
+        const scrollContainer = scrollContainerRef.current;
+        if (!scrollContainer) return;
+
+        let scrollTimeout = null;
+        const handleScroll = () => {
+            // Limpiar timeout anterior
+            if (scrollTimeout) clearTimeout(scrollTimeout);
+            
+            // Esperar a que el usuario deje de hacer scroll
+            scrollTimeout = setTimeout(() => {
+                // Si el usuario está cerca del inicio (primeros 300px) y no estamos ya cargando
+                if (scrollContainer.scrollLeft < 300 && !isLoadingMore && monthsBack < 36) {
+                    setIsLoadingMore(true);
+                    
+                    // Guardar posición actual antes de cargar
+                    const currentScrollLeft = scrollContainer.scrollLeft;
+                    const currentScrollWidth = scrollContainer.scrollWidth;
+                    
+                    // Cargar 3 meses más hacia atrás
+                    setMonthsBack(prev => prev + 3);
+                    
+                    // Ajustar scroll después de que se rendericen los nuevos días
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            const newScrollWidth = scrollContainer.scrollWidth;
+                            const addedWidth = newScrollWidth - currentScrollWidth;
+                            scrollContainer.scrollLeft = currentScrollLeft + addedWidth;
+                            setIsLoadingMore(false);
+                        });
+                    });
+                }
+            }, 150); // Esperar 150ms después de que el usuario deje de hacer scroll
+        };
+
+        scrollContainer.addEventListener('scroll', handleScroll);
+        return () => {
+            scrollContainer.removeEventListener('scroll', handleScroll);
+            if (scrollTimeout) clearTimeout(scrollTimeout);
+        };
+    }, [isLoadingMore, monthsBack]);
 
 
     useEffect(() => {
@@ -694,9 +845,9 @@ function App() {
 
         if (error) {
             console.error('Error al guardar el servicio:', error);
-            alert(`Error al guardar el servicio: ${error.message}`);
+            setNotification({ message: `Error al crear el servicio: ${error.message}`, type: 'error' });
         } else {
-            alert('Servicio guardado exitosamente.');
+            setNotification({ message: 'Servicio creado correctamente', type: 'success' });
         }
     };
 
@@ -710,9 +861,9 @@ function App() {
             // eslint-disable-next-line
         if (error) {
             console.error('Error al actualizar el servicio:', error);
-            alert(`Error al actualizar el servicio: ${error.message}`);
+            setNotification({ message: `Error al actualizar el servicio: ${error.message}`, type: 'error' });
         } else {
-            alert('Servicio actualizado exitosamente.');
+            setNotification({ message: 'Servicio actualizado correctamente', type: 'success' });
             // Actualizar el estado local
             setServices(prevServices => {
                 const updatedServices = { ...prevServices };
@@ -749,9 +900,9 @@ function App() {
 
         if (error) {
             console.error('Error al eliminar el servicio:', error);
-            alert(`Error al eliminar el servicio: ${error.message}`);
+            setNotification({ message: `Error al eliminar el servicio: ${error.message}`, type: 'error' });
         } else {
-            alert('Servicio eliminado exitosamente.');
+            setNotification({ message: 'Servicio eliminado correctamente', type: 'success' });
             // Actualizar el estado local
             setServices(prevServices => {
                 const updatedServices = { ...prevServices };
@@ -772,9 +923,31 @@ function App() {
             ...prevData,
             unidades: [
                 ...prevData.unidades,
-                { movil: '', choferes: ['', '', ''] }
+                { movil: '', choferes: [] }
             ]
         }));
+    };
+
+    const addChofer = (unidadIndex) => {
+        setFormData((prevData) => {
+            const updatedUnidades = [...prevData.unidades];
+            updatedUnidades[unidadIndex].choferes = [...updatedUnidades[unidadIndex].choferes, ''];
+            return {
+                ...prevData,
+                unidades: updatedUnidades
+            };
+        });
+    };
+
+    const removeChofer = (unidadIndex, choferIndex) => {
+        setFormData((prevData) => {
+            const updatedUnidades = [...prevData.unidades];
+            updatedUnidades[unidadIndex].choferes.splice(choferIndex, 1);
+            return {
+                ...prevData,
+                unidades: updatedUnidades
+            };
+        });
     };
 
     const handleInputChange = (e) => {
@@ -903,10 +1076,10 @@ function App() {
     };
 
     // Manejo de filtros
-    const handleFilterChange = (selectedOption, filterType) => {
+    const handleFilterChange = (selectedOptions, filterType) => {
         setFilters(prevFilters => ({
             ...prevFilters,
-            [filterType]: selectedOption ? selectedOption.value : null
+            [filterType]: selectedOptions ? selectedOptions.map(opt => opt.value) : []
         }));
     };
 
@@ -919,7 +1092,7 @@ function App() {
     // Función para generar informes en PDF
     const generatePDFReport = () => {
         if (!reportStartDate || !reportEndDate) {
-            alert('Por favor, seleccione una fecha de inicio y una fecha de fin para el informe.');
+            setNotification({ message: 'Por favor, seleccione una fecha de inicio y una fecha de fin para el informe.', type: 'error' });
             return;
         }
 
@@ -1027,11 +1200,58 @@ function App() {
                 />
             )}
 
-            {!showForm && (
-                <>
-                    <h2 className="month-viewing">Visualizando: {displayedMonthName}</h2>
+            {/* Sistema de pestañas - solo visible cuando está autenticado */}
+            {isAuthenticated && (
+                <div className="tabs-container">
+                    <button 
+                        className={`tab-button ${activeTab === 'planificador' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('planificador')}
+                    >
+                        📅 Planificador
+                    </button>
+                    <button 
+                        className={`tab-button ${activeTab === 'recursos' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('recursos')}
+                    >
+                        🚐 Gestión de Recursos
+                    </button>
+                    <button 
+                        className={`tab-button ${activeTab === 'administracion' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('administracion')}
+                    >
+                        🗑️ Administración de Datos
+                    </button>
+                </div>
+            )}
 
-                    <div className="controls-container">
+            {/* Contenido según la pestaña activa */}
+            {activeTab === 'recursos' && isAuthenticated && (
+                <GestionRecursos />
+            )}
+
+            {activeTab === 'administracion' && isAuthenticated && (
+                <AdministracionDatos />
+            )}
+
+            {/* Planificador - visible siempre o cuando activeTab es 'planificador' */}
+            {(!isAuthenticated || activeTab === 'planificador') && !showForm && (
+                <>
+                    {/* Botón para toggle de controles */}
+                    <div className="toggle-controls-btn-container">
+                        <button 
+                            className="toggle-controls-btn"
+                            onClick={() => setShowControls(!showControls)}
+                            title={showControls ? "Ocultar controles" : "Mostrar controles"}
+                        >
+                            {showControls ? '🔼 Ocultar Controles' : '🔽 Mostrar Controles'}
+                        </button>
+                    </div>
+
+                    {showControls && (
+                        <>
+                            <h2 className="month-viewing">Visualizando: {displayedMonthName}</h2>
+
+                            <div className="controls-container">
                         {/* Selector de mes */}
                         <div className="month-selector">
                             <label htmlFor="monthSelector">Ir al mes: </label>
@@ -1050,18 +1270,34 @@ function App() {
                                 <label>Filtrar por Chofer:</label>
                                 <Select
                                     options={choferesOptions}
-                                    onChange={(option) => handleFilterChange(option, 'chofer')}
+                                    onChange={(options) => handleFilterChange(options, 'choferes')}
+                                    isMulti
                                     isClearable
-                                    placeholder="Seleccione un chofer..."
+                                    isSearchable
+                                    placeholder="Seleccione choferes..."
+                                    noOptionsMessage={() => "No hay opciones"}
+                                    styles={{
+                                        menu: (provided) => ({ ...provided, zIndex: 9999 }),
+                                        menuPortal: (provided) => ({ ...provided, zIndex: 9999 })
+                                    }}
+                                    menuPortalTarget={document.body}
                                 />
                             </div>
                             <div className="filter">
                                 <label>Filtrar por Móvil:</label>
                                 <Select
                                     options={movilesOptions}
-                                    onChange={(option) => handleFilterChange(option, 'movil')}
+                                    onChange={(options) => handleFilterChange(options, 'moviles')}
+                                    isMulti
                                     isClearable
-                                    placeholder="Seleccione un móvil..."
+                                    isSearchable
+                                    placeholder="Seleccione móviles..."
+                                    noOptionsMessage={() => "No hay opciones"}
+                                    styles={{
+                                        menu: (provided) => ({ ...provided, zIndex: 9999 }),
+                                        menuPortal: (provided) => ({ ...provided, zIndex: 9999 })
+                                    }}
+                                    menuPortalTarget={document.body}
                                 />
                             </div>
                         </div>
@@ -1145,6 +1381,8 @@ function App() {
                             </>
                         )}
                     </div>
+                    </>
+                    )}
 
                     {/* Botones de navegación en los extremos */}
                     <div className="slider-container">
@@ -1179,12 +1417,15 @@ function App() {
                 </>
             )}
 
-            {showForm && (
+            {/* Formulario de servicio - solo en pestaña planificador */}
+            {activeTab === 'planificador' && showForm && (
                 <ServiceForm
                     editingService={editingService}
                     formData={formData}
                     setFormData={setFormData}
                     addUnidad={addUnidad}
+                    addChofer={addChofer}
+                    removeChofer={removeChofer}
                     handleInputChange={handleInputChange}
                     handleArrayInputChange={handleArrayInputChange}
                     handleChoferInputChange={handleChoferInputChange}
@@ -1194,10 +1435,13 @@ function App() {
                     setEditingService={setEditingService}
                     services={services}
                     showForm={showForm}
+                    choferesOptions={choferesOptions}
+                    movilesOptions={movilesOptions}
                 />
             )}
 
-            {expandedService && (
+            {/* Modal de servicio expandido - solo en pestaña planificador */}
+            {activeTab === 'planificador' && expandedService && (
                 <ServiceModal
                     expandedService={expandedService}
                     setExpandedService={setExpandedService}
@@ -1206,6 +1450,12 @@ function App() {
                     deleteService={deleteService}
                 />
             )}
+
+            {/* Modal de notificación */}
+            <NotificationModal 
+                notification={notification} 
+                onClose={() => setNotification(null)} 
+            />
         </div>
     );
 }
